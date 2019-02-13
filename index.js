@@ -26,7 +26,32 @@ app.engine('html', require('ejs').renderFile);
 
 // setting the app middleware to account for ./REGION/REALM/CHAR
 
-app.use(/\/(EU|NA|KR|TW)\/\w+\/\w+/i,function(req,res,next){
+// TODO: tweak this so that it's only available to answe reply ajax calls
+/*app.use('*',function(req,res,next){
+        console.log("Is this ajax: " +req.xhr);
+	// if ajax => next
+	// if not, redirect to /
+        next();
+});
+*/
+
+// ACTUAL TODO: add a check for req.xhr in get, so that it's only available from ajax, and redirects to the
+// main page if not ajax.
+// Also, try to setup the output format as json and serve a very nice page with chart.js and shit
+// basically: if (ajax) 
+//               if (charExist) (check via smol api call)
+//                  simulate()
+//                  serveResult()
+//               else
+//                  reply = char doesn't exist, so we can update page accordingly
+//             else
+//               redirect to /
+app.get("/eu/medivh/nevess",function(req,res,next){
+	res.send("<3");
+
+});
+
+app.get(/\/(EU|NA|KR|TW)\/\w+\/\w+/i,function(req,res,next){
 	//res.send("Pog");
 	let path = req.originalUrl;
 	// path = /eu/suramar/devolution (with or without trailing /)
@@ -82,8 +107,9 @@ var lul = async function(){
 	lul();
 });
 
-// set middleware to capture every route that's not a character route
-app.use('*',function(req,res,next){
+// set GET (and not middleware) to capture every route that's not a character route
+// OMEGA redundant with ajax. BUT it's also useful is some 140iq man uses ajax to acces a retarded route
+app.get('*',function(req,res,next){
 	res.send('TriSad');
 });
 
