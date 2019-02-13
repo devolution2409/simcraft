@@ -33,7 +33,7 @@ app.use(/\/(EU|NA|KR|TW)\/\w+\/\w+/i,function(req,res,next){
 	path = path.substring(1);
 	let infos = path.split('/');
 	// info is either ['eu','suramar','devolution'] or ['eu','suramar','devolution','']
-	console.log("Recieved request for:" + infos);
+	console.log("Received request for:" + infos);
 
 // generating random name for the file
 let uuid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -41,9 +41,9 @@ let file = uuid + '.html';
 
 // variable function here because we need async to be able to await the response before sending it
 var lul = async function(){
-	try{
-	await exec( "../engine/simc" + " armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file);
+	await exec( "../engine/simc" + " armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file)
 	// search how to output stout again forsenE (even tho await-exec might fuck it up)
+	.then( (data) => {
 	console.log("Generated: " + file );
 
 	// move the file to the right folder because renderer will search in /views/
@@ -56,18 +56,28 @@ var lul = async function(){
 	res.render(file);
 	// remove the file 
 	fs.unlink('/simc/web/views/' + uuid + '.html', (err) => { 
-		if (err) throw err;
-		else console.log('File removed from /views/');
-		});
+			if (err) throw err;
+			else console.log('File removed from /views/');
+			});
 	console.log("Simulation request successfully processed!");
-	}catch(e){
 		// if exception comes from the command, it will have stderr
 		// if stderr contains Char not found, we redirect it to the main page forsenE
 		//TODO: api call myself with ajax to see if char exist :)
-		if (e.hasOwnProperty('stderr'))
-			if (e.stderr.includes("Character not found"))
-				res.redirect('/');
-	}
+	})
+	.catch( (err) => {
+		if(err.hasOwnProperty('stderr'))		
+			if (err.stderr.includes("Realm not found")){
+				console.log(`Realm: ${infos[1]} not found !`);
+				res.send("Realm not found!");
+			}else if (err.stderr.includes("Character not found")){
+				res.send("Character not found!");
+				console.log(`Realm: ${infos[2]} not found !`);
+
+			}
+
+	});
+
+
 };
 	lul();
 });

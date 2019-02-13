@@ -88,6 +88,11 @@ CMD ["node","index.js"]
 * g++ version 8.2.0 (Alpine 8.2.0)
 * node v10.14.2 (packages: express, ejs, async-exec)
 
+## TODO
+
+* Proper check with api to see if character exists before allowing the sim to take place
+
+
 ## Find Us
 
 * [GitHub](https://github.com/devolution2409/simcraft)
