@@ -66,7 +66,7 @@ let file = uuid + '.html';
 
 // variable function here because we need async to be able to await the response before sending it
 var lul = async function(){
-	await exec( "../engine/simc" + " armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file)
+	await exec( "../engine/simc " + "calculate_scale_factors=1 armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file)
 	// search how to output stout again forsenE (even tho await-exec might fuck it up)
 	.then( (data) => {
 	console.log("Generated: " + file );
