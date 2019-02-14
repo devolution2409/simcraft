@@ -66,7 +66,8 @@ let file = uuid + '.html';
 
 // variable function here because we need async to be able to await the response before sending it
 var lul = async function(){
-	await exec( "../engine/simc " + "calculate_scale_factors=1 armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file)
+	// calculate_scale_factors=1 requires at least >100000 iterations
+	await exec( "../engine/simc target_error=0.05" + "calculate_scale_factors=1 armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file)
 	// search how to output stout again forsenE (even tho await-exec might fuck it up)
 	.then( (data) => {
 	console.log("Generated: " + file );
@@ -110,7 +111,8 @@ var lul = async function(){
 // set GET (and not middleware) to capture every route that's not a character route
 // OMEGA redundant with ajax. BUT it's also useful is some 140iq man uses ajax to acces a retarded route
 app.get('*',function(req,res,next){
-	res.send('TriSad');
+	//res.send('TriSad');
+	res.render("index.html");
 });
 
 
