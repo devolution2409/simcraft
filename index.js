@@ -67,7 +67,7 @@ let json = uuid + '.json';
 // variable function here because we need async to be able to await the response before sending it
 var lul = async function(){
 	// calculate_scale_factors=1 requires at least >100000 iterations
-	await exec( "../engine/simc target_error=0.05" + "calculate_scale_factors=1 armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file + " json=" + json)
+	await exec( "../engine/simc target_error=0.05" + " armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file + " json=" + json)
 	// search how to output stout again forsenE (even tho await-exec might fuck it up)
 	.then( (data) => {
 	console.log("Generated: " + file );
