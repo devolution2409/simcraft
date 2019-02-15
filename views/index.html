@@ -622,14 +622,29 @@ methods:{
 	sim:function(){
 		console.log('LUL');
 		let url = '/' + this.regions[this.region].text + '/' + this.server + '/' + this.character;
-		axios.get(url)
+	/*	axios.get(url, {
+			timeout: 0,
+			}
+		})
 		.then( (response) => {
 			console.log(response);
-		});
+		});*/
+		var source = new EventSource(url);
+		source.onopen = function() {
+			console.log("yeeeha");
+		};
+
+		source.onerror = function () {
+			console.log("error");
+
+		};
+		source.onmessage = function(evt){
+			console.log(evt.data);
+		};
 	},
 },
 
-});
+}); //end new vue
 
 </script>
 
