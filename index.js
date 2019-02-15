@@ -94,6 +94,9 @@ var lul = async function(){
 	fs.readFile("/simc/web/views/" + json, (err,d)=>{
                         if (err) res.send(err);
                         let obj = JSON.parse(d);
+		//	if (obj.hasOwnProperty('git_revision')){
+		//		res.send("Git revision:" + obj['git_revision']);
+		//	}
                         res.json(obj);
         });
 	
@@ -108,7 +111,9 @@ var lul = async function(){
 		//TODO: api call myself with ajax to see if char exist :)
 	})
 	.catch( (err) => {
-		if(err.hasOwnProperty('stderr'))		
+		if(err.hasOwnProperty('stderr'))
+			res.json({'error' : err.stderr});
+			/*		
 			if (err.stderr.includes("Realm not found")){
 				console.log(`Realm: ${infos[1]} not found !`);
 				res.send("Realm not found!");
@@ -117,6 +122,7 @@ var lul = async function(){
 				console.log(`Realm: ${infos[2]} not found !`);
 
 			}
+			console.log(err);*/
 
 	});
 
@@ -154,7 +160,7 @@ fs.access('/.dockerenv', fs.F_OK, (err) => {
 			let getIp = async () => {
 			exec("curl http://ifconfig.me/ip").then( (data) =>{
 				host = data.stdout;
-				console.log("It appears you are running this node application through docker. The application will be available at "+ host + ":externalport");
+				console.log("Application listening to port 80!\n\nOops! It appears you are running this node application through docker. The application will be available at host:externalport");
 
 				});
 			};

@@ -11,14 +11,14 @@
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
 <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
-
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <title> Simcraft wrapper </title>
 
 </head>
 
 <body>
-<div class="container">
-<form id="app">
+<div class="container" id="app">
+<form>
 <table class="container">
 <tbody>
 <tr>
@@ -43,21 +43,25 @@
 			</select>
 		</td>
 		<td>
-    			<input class="form-control" id="charName" placeholder="nig">
+    			<input class="form-control" id="charName" v-model="character" placeholder="nig">
 		</td>
 		<td>
-			<button type="button" class="btn btn-primary">Go!</button>
+			<button type="button" v-on:click="sim" class="btn btn-primary">Go!</button>
 		</td>
 	</tr></tbody></table>
 </form>	
 </div>
 
+
 <script>
+// cant use import cause ES5 LUL
+//import axios from 'axios';
 new Vue({
   el: '#app',
   data: {
     region: '-1',
     server: '-1',
+    character: '-1',
     serverList:['Please select a region first!'],
     isDisabled: true,
     regions: [
@@ -614,7 +618,15 @@ methods:{
 	regionSelected:function(){
 		this.server = '-1';
 		this.serverList = this.regions[this.region].servers;
-	}
+	},
+	sim:function(){
+		console.log('LUL');
+		let url = '/' + this.regions[this.region].text + '/' + this.server + '/' + this.character;
+		axios.get(url)
+		.then( (response) => {
+			console.log(response);
+		});
+	},
 },
 
 });
