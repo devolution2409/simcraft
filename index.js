@@ -63,24 +63,41 @@ app.get(/\/(EU|NA|KR|TW)\/\w+\/\w+/i,function(req,res,next){
 // generating random name for the file
 let uuid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 let file = uuid + '.html';
-
+let json = uuid + '.json';
 // variable function here because we need async to be able to await the response before sending it
 var lul = async function(){
 	// calculate_scale_factors=1 requires at least >100000 iterations
-	await exec( "../engine/simc target_error=0.05" + "calculate_scale_factors=1 armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file)
+	await exec( "../engine/simc target_error=0.05" + "calculate_scale_factors=1 armory=" + infos[0] + "," + infos[1] + "," + infos [2] + " html=" + file + " json=" + json)
 	// search how to output stout again forsenE (even tho await-exec might fuck it up)
 	.then( (data) => {
 	console.log("Generated: " + file );
-
+	console.log("Generated: " + json );
 	// move the file to the right folder because renderer will search in /views/
 	fs.renameSync('/simc/web/' + file,'/simc/web/views/' + file, (err) => {
-		if (err) throw err;
-		else console.log('Moved file to /views/');
+		if (err){
+		 	throw err;
+			console.log(err);
+		}else console.log('Moved file to /views/');
 	});
+	fs.renameSync('/simc/web/' + json,'/simc/web/views/' + json, (err) => {
+		if (err){
+			throw err;
+			console.log(err);
+		}else console.log('Moved json to /views/');
+	});
+
+
 	// send .html to client
 	console.log("Serving report to client..");
-	res.render(file);
-	// remove the file 
+	//dis is 4html 4Head
+	// res.render(file);
+	fs.readFile("/simc/web/views/" + json, (err,d)=>{
+                        if (err) res.send(err);
+                        let obj = JSON.parse(d);
+                        res.json(obj);
+        });
+	
+	// remove the html file 
 	fs.unlink('/simc/web/views/' + uuid + '.html', (err) => { 
 			if (err) throw err;
 			else console.log('File removed from /views/');
