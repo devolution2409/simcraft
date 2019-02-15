@@ -3,53 +3,69 @@
 
 <head>
 <!-- 4Head -->
-<link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
+<!-- <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
 <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"/>
+-->
 
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 
 <!-- development version, includes helpful console warnings -->
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
 <script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
-<script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<!-- <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script> -->
+<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
 <title> Simcraft wrapper </title>
 
 </head>
 
 <body>
 <div class="container" id="app">
-<form>
-<table class="container">
-<tbody>
-<tr>
-<th> Select region..</th>
-<th class="tableServer"> Select server..</th>
-<th> Character name?</th>
-<th> </th>
-</tr>
-<tr>
-<td>
-			<select class="form-control" id="regionSelect" v-model="region" @change="regionSelected">
-      				<option disabled value="-1">Choose..</option>
-				<option v-for="region in regions" v-bind:value="region.value">
-   					{{ region.text }}
-  				</option>
-			</select>
-</td><td class="tableServer">
-			<select class="form-control" id="serverSelect" v-model="server">
-      				<option disabled value="-1">Choose..</option> 
-				<option v-for="server in serverList" :disabled="server=='Please select a region first!'">{{ server }} </option>    			
+<v-app>
+      <v-content>
+	<v-container>
+	  <v-layout row justify-space-between>
+    	    <v-flex  xs12 sm12 md3>
+			<v-select class="form-control"  outline v-model="region" v-bind:items="regions" @change="regionSelected" label="Choose a region">
+			</v-select>
+     	    
+	    </v-flex>
+    	    <v-flex  xs12 sm12 md4>
+			<v-select class="form-control" :menu-props="{ auto: true }" outline v-model="server" v-bind:items="serverList" no-data-text="Please select a region first" label="Choose a server">
+			</v-select>
+     	   </v-flex> 
+	   <v-flex xs12 sm12 md3>
+          	<v-text-field v-model="character"
+            counter="25"
+            label="Character Name"
+            outline
+maxlength="25"
+          ></v-text-field>
+        </v-flex>
+	 </v-layout>
+<v-layout>
+<v-btn block color="secondary" dark v-on:click="sim">Run Simulation !</v-btn>
+</v-layout>	
+<v-layout row align-center justify-space-between v-if="simulationRunning">
+ <v-progress-circular
+      :rotate="360"
+      :size="100"
+      :width="15"
+      :value="progressPercent"
+      color="teal"
+    >
+      {{ progressPercentText }}
+    </v-progress-circular> <h1> {{ progressText }} </h1>
+	</v-layout>
 
-			</select>
-		</td>
-		<td>
-    			<input class="form-control" id="charName" v-model="character" placeholder="nig">
-		</td>
-		<td>
-			<button type="button" v-on:click="sim" class="btn btn-primary">Go!</button>
-		</td>
-	</tr></tbody></table>
-</form>	
+	<v-container>
+      </v-content>
+</v-app>
+<!--			<button type="button" v-on:click="sim" class="btn btn-primary">Go!</button>
+-->
 </div>
 
 
@@ -59,16 +75,17 @@
 new Vue({
   el: '#app',
   data: {
-    region: '-1',
-    server: '-1',
-    character: '-1',
-    serverList:['Please select a region first!'],
-    isDisabled: true,
-    regions: [
-	{
-		text: 'EU',
-		value: '0',
-		servers:[
+    region: '',
+    character: '',
+    server: '', 
+    serverList:[],
+    simulationRunning: false,
+    progressPercent: 0,
+    progressPercentText: '',
+    progressText: '',
+    regions:['EU','US','KR'],
+
+    servers:{ EU: [
 "Aerie Peak",
 "Agamaggan",
 "Aggra (Português)",
@@ -335,12 +352,8 @@ new Vue({
 "Zirkel des Cenarius",
 "Zul'jin",
 "Zuluhed"
-]
-	 },    
-	{
-	text: 'US', 
-	value: '1',
-	servers:[
+],
+	US:[
 "Aerie Peak",
 "Agamaggan",
 "Aggramar",
@@ -587,12 +600,7 @@ new Vue({
 "Zul'jin",
 "Zuluhed"
 ],
-
-	 },
-	{
-		text: 'KR',
-		value: '2',
-		servers:[
+ KR:[
 "굴단",
 "노르간논",
 "달라란",
@@ -611,35 +619,42 @@ new Vue({
 "하이잘",
 "헬스크림"
 ],
-	 }
-    ]
-  },
+},
+ rules: [v => v.length <= 25 || 'Max 25 characters'],
+  }, //end of data
 methods:{
 	regionSelected:function(){
-		this.server = '-1';
-		this.serverList = this.regions[this.region].servers;
+		this.server = '';
+		this.serverList = this.servers[this.region];
 	},
 	sim:function(){
-		console.log('LUL');
-		let url = '/' + this.regions[this.region].text + '/' + this.server + '/' + this.character;
-	/*	axios.get(url, {
-			timeout: 0,
-			}
-		})
-		.then( (response) => {
-			console.log(response);
-		});*/
+		
+		let that = this;
+		this.simulationRunning = true;
+		this.progressText = "Sending simulation request to server!"
+		let url = '/' + this.region + '/' + this.server + '/' + this.character;
 		var source = new EventSource(url);
 		source.onopen = function() {
-			console.log("yeeeha");
+			//console.log("yeeeha");
 		};
 
-		source.onerror = function () {
-			console.log("error");
-
+		source.onerror = function (error) {
+			console.log("error:" + error);
+			source.close();
 		};
-		source.onmessage = function(evt){
-			console.log(evt.data);
+		source.onmessage = (evt) =>{
+			//console.log(evt.data);
+			let obj = JSON.parse(evt.data);
+			console.log(obj);
+			// if it's an error message
+			if (obj.hasOwnProperty('error')){
+
+				console.log("nig nog: " + obj['error']);
+				this.progressText = obj['error'];
+				source.close();
+			}
+				
+			
 		};
 	},
 },
@@ -648,12 +663,7 @@ methods:{
 
 </script>
 
-<style>
-.tableServer {
-	min-width: 178px;
-}
 
-</style>
 
 </body>
 

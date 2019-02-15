@@ -46,10 +46,9 @@ app.engine('html', require('ejs').renderFile);
 //                  reply = char doesn't exist, so we can update page accordingly
 //             else
 //               redirect to /
-app.get("/eu/medivh/nevess",function(req,res,next){
-	res.send("<3");
 
-});
+
+//  actually fuck ajax, SSE is better forsenE
 
 app.get(/\/(EU|NA|KR|TW)\/\w+\/\w+/i,function(req,res,next){
 	//needed to register this as SSE
@@ -86,7 +85,7 @@ var lul = async function(){
 		if (data.includes("Simulating...")){
 			console.log(`${data}`);
 		}
-  	//	console.log(`stdout from the child: ${data}`);
+  		console.log(`stdout from the child: ${data}`);
 	// need to apply regexp to stdout to find out which step we at
 		let regexp = RegExp(/(Generating \w+): (\d+)\/(\d+) \W+ \d+\/\d+ \w+=\d+ \w+=\d+(\.)?\d+% (\d+min)? ?(\d+sec)?/gm);
 		let matches;
@@ -167,7 +166,8 @@ var lul = async function(){
 
 	}else{
 		//let temp = "data: exited simc with status code: " + code + "\n\n";
-		let temp = "data: " + stderr[0] + "\n\n";
+		let msg = { error: stderr[0]};
+		let temp = "data: " + JSON.stringify(msg) + " \n\n ";
 		res.send(temp);
 		res.end();
 		console.log(stderr[0]);
