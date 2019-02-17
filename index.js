@@ -68,7 +68,7 @@ app.get(/\/(EU|NA|KR|TW)\/\w+\/\w+\/check_existence/i,function(req,res,next){
         GetCredentials().then( (auth) => {
                 let path = req.originalUrl.substring(1).split('/');
                 let accessToken = auth.access_token;         
-                let url = "https://" + path[0] + ".api.blizzard.com/wow/character/" + path[1] + "/" + path[2] + "?locale=en_US&access_token=" + accessToken;
+                let url = "https://" + path[0] + ".api.blizzard.com/wow/character/" + path[1] + "/" + path[2] + "?fields=talents,items&locale=en_US&access_token=" + accessToken;
                 axios.get(url,{         
                         headers: {                                 
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'

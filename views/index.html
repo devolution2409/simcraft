@@ -16,8 +16,10 @@
 <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
 <script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
 
-<!-- <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script> -->
-<!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script> 
+<!-- wowhead forsenE -->
+<script>var whTooltips = {colorLinks: true, iconizeLinks: true, renameLinks: false, iconSize: 'large'};</script>
+<script src="http://wow.zamimg.com/widgets/power.js"></script>
 <title> Simcraft wrapper </title>
 
 </head>
@@ -43,7 +45,13 @@
             label="Character Name"
             outline
 maxlength="25"
-          ></v-text-field>
+v-bind:append-outer-icon="charValidator"
+:rules="charRules"
+clearable
+@change="charTyped"
+          >
+ <v-progress-linear :indeterminate="true"  v-if:="charCheck"></v-progress-linear>
+</v-text-field>
         </v-flex>
 	 </v-layout>
 <v-layout>
@@ -68,7 +76,9 @@ maxlength="25"
     </v-progress-circular> <h1> {{ progressText }} </h1>
 	</v-layout>
 	<v-layout row justify-space-between>
-	<v-flex xs6> blblbl </v-flex>
+	<v-flex xs6>
+		<!-- <a href="#" v-for="item in charItems" data-wowhead="item=166760">hai</a> -->
+ 	</v-flex>
 	<v-flex xs6> 
   <v-data-table
     hide-headers
@@ -99,6 +109,10 @@ new Vue({
   data: {
     region: '',
     character: '',
+    charData: {},
+    charItems: [],
+    charExists: null,
+    charCheck: false,
     server: '', 
     serverList:[],
     simStats: [],
@@ -644,7 +658,7 @@ new Vue({
 "헬스크림"
 ],
 },
- rules: [v => v.length <= 25 || 'Max 25 characters'],
+		
   }, //end of data
 methods:{
 	regionSelected:function(){
@@ -701,8 +715,63 @@ methods:{
 			
 		};
 	},
-},
+	charTyped: function(){
+		charCheck = true;
+	}
+}, //end of method
+computed: {
+	charValidator: function(){
+		if (this.charExists === true)
+			return "check_circle";
+		else
+			return "warning";
 
+	},
+ charRules: function(){
+	return [
+	//v => v.length <= 25 || 'Max 25 characters',
+	v => {
+		if ( this.region == '' || this.server == ''){
+			return true;
+		}
+
+		axios.get('/' + this.region + '/' + this.server + '/' + v + '/check_existence')
+ 		 .then( (response) => {
+    			if (response.data.hasOwnProperty('status')){
+				this.charExists = false;
+		//		temp = `${response.data.reason}`;
+		//		console.log("temp: " + temp);
+		//		return temp;
+			}else if  (response.data.hasOwnProperty('lastModified')){
+				this.charExists = true;
+				this.charData = response.data;
+						
+
+			}
+	  
+		})
+ 		 .catch(function (error) {
+    		// handle error
+  		})
+		.then ( () =>{ 
+			charCheck = false;
+		});
+		return true;
+		}
+	]},
+
+},//end of computed
+watch: {
+	charData: function( data, oldData){
+		console.log(data);
+		this.charItems = [];
+Object.keys(data.items).forEach(function(key) {
+//	console.log(typeof(data.items[key])); 
+	if (typeof(data.items[key]) == "object")
+		this.charItems.push(data.items[key]);
+},this);
+	}
+}
 }); //end new vue
 
 </script>
