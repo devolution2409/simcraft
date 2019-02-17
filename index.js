@@ -2,9 +2,9 @@
 let express = require('express');
 let fs = require('fs');
 let app = express();
-//const exec = require('await-exec');
 const { spawn } = require('child_process');
-
+const axios = require('axios');
+const oauth = require('axios-oauth-client');
 
 // checking if the variables were set, if they weren't, we serve a page saying they weren't.. DUH
 if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET ||
@@ -19,14 +19,28 @@ if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET ||
 }else{
 
 
+// defined a function to get access token to perform requests
+// https://develop.battle.net/documentation/guides/using-oauth/client-credentials-flow
+let GetCredentials = async function () {
+	const GetAuthorizationCode = oauth.client(axios.create(), {
+	  url: 'https://us.battle.net/oauth/token',
+	  grant_type: 'client_credentials',
+	  client_id: process.env.CLIENT_ID,
+	  client_secret: process.env.CLIENT_SECRET
+	});
+
+        let auth = await GetAuthorizationCode();
+        return new Promise ( (resolve,reject) => {
+                resolve(auth);
+        });
+};
+
+
 
 // setting default render engine to htlm (need ejs)
 app.set('view engine', 'html');
 app.engine('html', require('ejs').renderFile);
 
-// setting the app middleware to account for ./REGION/REALM/CHAR
-
-// TODO: tweak this so that it's only available to answe reply ajax calls
 /*app.use('*',function(req,res,next){
         console.log("Is this ajax: " +req.xhr);
 	// if ajax => next
@@ -48,8 +62,30 @@ app.engine('html', require('ejs').renderFile);
 //               redirect to /
 
 
-//  actually fuck ajax, SSE is better forsenE
+          
+app.get(/\/(EU|NA|KR|TW)\/\w+\/\w+\/check_existence/i,function(req,res,next){
+//      https://eu.api.blizzard.com/wow/character/suramar/devolution?locale=en_US&access_token=USXheV5m0buDLGJpSz1Bk1YSOD51bwEtcR
+        GetCredentials().then( (auth) => {
+                let path = req.originalUrl.substring(1).split('/');
+                let accessToken = auth.access_token;         
+                let url = "https://" + path[0] + ".api.blizzard.com/wow/character/" + path[1] + "/" + path[2] + "?locale=en_US&access_token=" + accessToken;
+                axios.get(url,{         
+                        headers: {                                 
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        }                                  
+                })                         
+                .then( (response) => {            
+                        res.json(response.data);
+                        //console.log(response.data);
+                })                              
+                .catch( (err) => {                
+                        res.json(err.response.data);
+                        //console.log(err.response.data);
+                });
+        });
+});
 
+//  actually fuck ajax, SSE is better forsenE
 app.get(/\/(EU|NA|KR|TW)\/\w+\/\w+/i,function(req,res,next){
 	//needed to register this as SSE
 	res.status(200).set({
@@ -72,7 +108,8 @@ let json = uuid + '.json';
 var lul = async function(){
 	// calculate_scale_factors=1 requires at least >10000 iterations
 	let armoryString =  "armory=" + infos[0] + "," + infos[1] + "," + infos[2]
-	const child = spawn ( "../engine/simc", [armoryString,"target_error=0.05","html=" + file,"json=" + json,"calculate_scale_factors=1","iterations=10000","fight_style=patchwerk"]);
+	//const child = spawn ( "../engine/simc", [armoryString,"target_error=0.05","html=" + file,"json=" + json,"calculate_scale_factors=1","iterations=10000","fight_style=patchwerk"]);
+	const child = spawn ( "../engine/simc", [armoryString,"target_error=0.05","html=" + file,"json=" + json,"iterations=10000","fight_style=patchwerk"]);
 	//fetching stdout
 	let currentStep = 0;
 	let stderr = [];
@@ -82,10 +119,10 @@ var lul = async function(){
 
 
 	for await (const data of child.stdout) {
-		if (data.includes("Simulating...")){
-			console.log(`${data}`);
-		}
-  		console.log(`stdout from the child: ${data}`);
+		//if (data.includes("Simulating...")){
+	//		console.log(`${data}`);
+	//	}
+  	//	console.log(`stdout from the child: ${data}`);
 	// need to apply regexp to stdout to find out which step we at
 		let regexp = RegExp(/(Generating \w+): (\d+)\/(\d+) \W+ \d+\/\d+ \w+=\d+ \w+=\d+(\.)?\d+% (\d+min)? ?(\d+sec)?/gm);
 		let matches;

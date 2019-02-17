@@ -23,8 +23,8 @@
 </head>
 
 <body>
-<div class="container" id="app">
-<v-app>
+<div id="app">
+<v-app dark fluid ma-0 pa-0 fill-height>
       <v-content>
 	<v-container>
 	  <v-layout row justify-space-between>
@@ -34,8 +34,8 @@
      	    
 	    </v-flex>
     	    <v-flex  xs12 sm12 md4>
-			<v-select class="form-control" :menu-props="{ auto: true }" outline v-model="server" v-bind:items="serverList" no-data-text="Please select a region first" label="Choose a server">
-			</v-select>
+			<v-autocomplete class="form-control" :menu-props="{ auto: true }" outline v-model="server" v-bind:items="serverList" no-data-text="Please select a region first" label="Choose a server">
+			</v-autocomplete>
      	   </v-flex> 
 	   <v-flex xs12 sm12 md3>
           	<v-text-field v-model="character"
@@ -49,18 +49,40 @@ maxlength="25"
 <v-layout>
 <v-btn block color="secondary" dark v-on:click="sim">Run Simulation !</v-btn>
 </v-layout>	
-<v-layout row align-center justify-space-between v-if="simulationRunning">
+<v-layout row align-center justify-space-between>
+<v-progress-circular
+      indeterminate
+      color="amber"
+      :size="100"
+       v-if="simulationBefore"
+    ></v-progress-circular>
  <v-progress-circular
       :rotate="360"
       :size="100"
       :width="15"
       :value="progressPercent"
       color="teal"
+      v-if="simulationRunning"
     >
       {{ progressPercentText }}
     </v-progress-circular> <h1> {{ progressText }} </h1>
 	</v-layout>
+	<v-layout row justify-space-between>
+	<v-flex xs6> blblbl </v-flex>
+	<v-flex xs6> 
+  <v-data-table
+    hide-headers
+    hide-actions
+    :items="simStats"
+    class="elevation-24"
+  >
+    <template slot="items" slot-scope="props">
+     <td class="text-xs-left">{{ props.item.parameter }}  </td> <td class="text-xs-right">{{ props.item.text }} </td>
+    </template>
+  </v-data-table>
+	</v-flex>
 
+	</v-layout>
 	<v-container>
       </v-content>
 </v-app>
@@ -79,6 +101,8 @@ new Vue({
     character: '',
     server: '', 
     serverList:[],
+    simStats: [],
+    simulationBefore: false,
     simulationRunning: false,
     progressPercent: 0,
     progressPercentText: '',
@@ -628,14 +652,15 @@ methods:{
 		this.serverList = this.servers[this.region];
 	},
 	sim:function(){
-		
-		let that = this;
-		this.simulationRunning = true;
+		this.simulationBefore = true;
 		this.progressText = "Sending simulation request to server!"
+		
 		let url = '/' + this.region + '/' + this.server + '/' + this.character;
 		var source = new EventSource(url);
 		source.onopen = function() {
-			//console.log("yeeeha");
+				
+		
+
 		};
 
 		source.onerror = function (error) {
@@ -643,15 +668,34 @@ methods:{
 			source.close();
 		};
 		source.onmessage = (evt) =>{
+			this.simulationBefore=false;
 			//console.log(evt.data);
 			let obj = JSON.parse(evt.data);
 			console.log(obj);
 			// if it's an error message
 			if (obj.hasOwnProperty('error')){
-
-				console.log("nig nog: " + obj['error']);
 				this.progressText = obj['error'];
+				this.sumulationRunning = false,
 				source.close();
+			}else{
+				if (obj.hasOwnProperty('current_step')){
+				this.simulationRunning = true;
+//	 progressPercent: 0,
+// 92     progressPercentText: '			
+				this.progressPercent = parseInt(obj['current_step'])/parseInt(obj['maximum_steps']);
+				this.progressPercentText = obj['current_step'] + "/" + obj['step_namme'] ;
+			 	this.progressText = "Performing step: " + obj['current_step'] + ": " + obj['step_name'] + ". Estimated time: " + obj['estimated_time']	
+				} else if (obj.hasOwnProperty('sim')){
+					this.progressPercent = 100;
+					this.progressPercentText = "100%";
+					this.progressText = "Simulation over !";
+					this.simStats =[];
+//em.parameters </span> <span class="text-xs-right">{{ props.item.text }
+					this.simStats.push ( { parameter: "Simc version", text: obj.version  });
+					this.simStats.push ( { parameter: "Build date", text: obj.build_date  });
+					this.simStats.push ( { parameter: "Git revision", text: obj.git_revision  });
+					
+				}
 			}
 				
 			
