@@ -75,11 +75,13 @@ clearable
       {{ progressPercentText }}
     </v-progress-circular> <h1> {{ progressText }} </h1>
 	</v-layout>
-	<v-layout row justify-space-between>
-	<v-flex xs6>
+	<v-layout row justify-space-between v-if="charExists && ">
+	<v-flex xs12 sm9>
 		<a href="#" v-for="item in charItems" :data-wowhead="item.wowhead"></a>
- 	</v-flex>
-	<v-flex xs6> 
+ 		<img class="iconmedium" src="/static/images/empty-off-hand.png" v-if="charOffHand == false">
+          	<v-chip > {{ charData.items.averageItemLevelEquipped }}</v-chip>
+	</v-flex>
+	<v-flex xs12 sm4> 
   <v-data-table
     hide-headers
     hide-actions
@@ -113,6 +115,7 @@ new Vue({
     charItems: [],
     charExists: null,
     charCheck: false,
+    charOffHand: false,
     server: '', 
     serverList:[],
     simStats: [],
@@ -766,17 +769,28 @@ watch: {
 	charData: function( data, oldData){
 		console.log(data);
 		this.charItems = [];
+		// if charData is empty we return
 		if (Object.keys(this.charData).length === 0 && this.charData.constructor === Object)
 			return;
+		console.log("offhand"+ typeof(this.charData.offHand));
+		this.charOffHand = (typeof(this.charData.items.offHand) == 'undefined') ? false : true;
+		
+
 
 		Object.keys(data.items).forEach(function(key) {
 //			console.log(typeof(data.items[key])); 
 			if (typeof(data.items[key]) == "object"){
+				// we don't want to display tabard and shirt
+				if ( key !== "tabard" && key !== "shirt"){
 				let temp = data.items[key];
 				temp.wowhead=`item=${data.items[key].id}`; 
 				this.charItems.push(temp);
+				}
 			}
 		},this);
+
+		
+		
 		//reinit or it wont be iconized
 		this.$nextTick(function () {
         		// DOM is now updated
@@ -796,6 +810,10 @@ watch: {
 <style>
 .iconlarge del,.iconmedium del,.icontiny del{
 	background-image: none !important;
+}
+img.iconlarge, img.iconmedium, img.icontiny{
+	display: inline-block;
+	vertical-align: middle;
 }
 </style>
 

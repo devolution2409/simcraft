@@ -19,6 +19,10 @@ if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET ||
 }else{
 
 
+//allowing public folder to be fetched
+app.use("/static", express.static('static'));
+app.use("/static/images",express.static('static/images'));
+
 // defined a function to get access token to perform requests
 // https://develop.battle.net/documentation/guides/using-oauth/client-credentials-flow
 let GetCredentials = async function () {
