@@ -57,12 +57,12 @@ clearable
 <v-layout>
 <v-btn block color="secondary" dark v-on:click="sim">Run Simulation !</v-btn>
 </v-layout>	
-<v-layout row align-center justify-space-between>
+<!-- <v-layout row align-center justify-space-between>
 <v-progress-circular
       indeterminate
       color="amber"
       :size="100"
-       v-if="simulationBefore"
+       v-if="simulationState =='before'"
     ></v-progress-circular>
  <v-progress-circular
       :rotate="360"
@@ -70,24 +70,68 @@ clearable
       :width="15"
       :value="progressPercent"
       color="teal"
-      v-if="simulationRunning"
+      v-if="simulationState == 'running'"
     >
       {{ progressPercentText }}
     </v-progress-circular> <h1> {{ progressText }} </h1>
 	</v-layout>
-	<v-layout row justify-space-between v-if="charExists && ">
-	<v-flex xs12 sm9>
-		<a href="#" v-for="item in charItems" :data-wowhead="item.wowhead"></a>
- 		<img class="iconmedium" src="/static/images/empty-off-hand.png" v-if="charOffHand == false">
-          	<v-chip > {{ charData.items.averageItemLevelEquipped }}</v-chip>
+-->
+	<v-layout row justify-space-between v-if="charExists && simulationState != '' && (simulationState == 'before'  || simulationState != 'running' || simulationState =='done' || simulationState == 'error')">
+	<v-flex xs12 sm8>
+		<v-layout row justify-space-between>
+			
+
+          <v-flex xs10>
+            <v-card class="white--text no-background elevation-24">
+              <v-layout>
+                <v-flex xs5 :class="charClass">
+                  <v-img
+                    :src="charImg"
+                    height="125px"
+                    contain
+                  ></v-img>
+                </v-flex>
+                <v-flex xs7>
+                  <v-card-title primary-title>
+                    <div>
+                      <div class="headline char-name">{{ charData.name.toUpperCase() }} </div> <!-- .split('').join(' ') }}</div> -->
+                      <div  v-if="simulationState == 'before' || simulationState == 'running'">  <v-progress-linear  :indeterminate="true" height="2"></v-progress-linear></div>
+                      <div> {{ charRace.toUpperCase() }} {{ charClass.toUpperCase() }} </div>
+			<div class="chard-dps" v-if="simulationState=='done'"> {{ Math.round(charDps).toLocaleString('en-US') }} DPS</div>
+                    </div>
+                  </v-card-title>
+                </v-flex>
+              </v-layout>
+              <v-divider light></v-divider>
+            </v-card>
+          </v-flex>
+	<!--		<v-flex sm4> <img :src="charImg"> </v-flex>
+			<v-flex sm8>
+				<h1> {{ charData.name.toUpperCase().split('').join(' ') }} </h1>
+				<h2> 120202 </h2>
+			</v-flex>--> 
+		</v-layout>
+		<v-layout row justify-space-between>
+			<a href="#" v-for="item in charItems" :data-wowhead="item.wowhead"></a>
+ 			<img class="iconmedium" src="/static/images/empty-off-hand.png" v-if="charOffHand == false">
+          		<v-chip > {{ charData.items.averageItemLevelEquipped }}</v-chip>
+		</v-layout>
 	</v-flex>
-	<v-flex xs12 sm4> 
+	<v-flex xs12 sm3> 
   <v-data-table
-    hide-headers
     hide-actions
     :items="simStats"
     class="elevation-24"
   >
+    <template slot="headers" slot-scope="props">
+      <th colspan=2 class="sim-header">Simulation Details</th>
+    </template>
+    <template slot="no-data">
+   <v-progress-linear  :indeterminate="true" height="2"></v-progress-linear> 
+	{{ progressText }}</div>
+	
+	</template>
+	
     <template slot="items" slot-scope="props">
      <td class="text-xs-left">{{ props.item.parameter }}  </td> <td class="text-xs-right">{{ props.item.text }} </td>
     </template>
@@ -116,11 +160,14 @@ new Vue({
     charExists: null,
     charCheck: false,
     charOffHand: false,
+    charClass: '',
+    charRace: '',
+    charImg: '',
+    charDps: '',
     server: '', 
     serverList:[],
     simStats: [],
-    simulationBefore: false,
-    simulationRunning: false,
+    simulationState: "",
     progressPercent: 0,
     progressPercentText: '',
     progressText: '',
@@ -669,8 +716,9 @@ methods:{
 		this.serverList = this.servers[this.region];
 	},
 	sim:function(){
-		this.simulationBefore = true;
+		this.simulationState = 'before';
 		this.progressText = "Sending simulation request to server!"
+		this.simStats = [];
 		
 		let url = '/' + this.region + '/' + this.server + '/' + this.character;
 		var source = new EventSource(url);
@@ -679,24 +727,30 @@ methods:{
 		
 
 		};
+		//reinit or it wont be iconized
+		this.$nextTick(function () {
+        		// DOM is now updated
+        		// `this` is bound to the current instance
+		$WowheadPower.init();     	
+		});
 
 		source.onerror = function (error) {
 			console.log("error:" + error);
 			source.close();
 		};
 		source.onmessage = (evt) =>{
-			this.simulationBefore=false;
+			this.simulationState=='running';
 			//console.log(evt.data);
 			let obj = JSON.parse(evt.data);
 			console.log(obj);
 			// if it's an error message
 			if (obj.hasOwnProperty('error')){
 				this.progressText = obj['error'];
-				this.sumulationRunning = false,
+				this.sumulationState = 'error',
 				source.close();
 			}else{
 				if (obj.hasOwnProperty('current_step')){
-				this.simulationRunning = true;
+				this.simulationState = 'running';
 //	 progressPercent: 0,
 // 92     progressPercentText: '			
 				this.progressPercent = parseInt(obj['current_step'])/parseInt(obj['maximum_steps']);
@@ -706,12 +760,29 @@ methods:{
 					this.progressPercent = 100;
 					this.progressPercentText = "100%";
 					this.progressText = "Simulation over !";
+					// Might change this to check for dps in players array 
+					this.charDps = obj.sim.statistics.raid_dps.mean;
 					this.simStats =[];
 //em.parameters </span> <span class="text-xs-right">{{ props.item.text }
-					this.simStats.push ( { parameter: "Simc version", text: obj.version  });
-					this.simStats.push ( { parameter: "Build date", text: obj.build_date  });
-					this.simStats.push ( { parameter: "Git revision", text: obj.git_revision  });
+					this.simStats.push ( { parameter: "Fight Style", text: obj.sim.options.fight_style  });
+					this.simStats.push ( { parameter: "Boss Target(s)", text: obj.sim.targets.length  });
+					this.simStats.push ( { parameter: "Mean Fight Duration (seconds)", text: Math.round(obj.sim.players[0].collected_data.fight_length.mean ) });
+					this.simStats.push ( { parameter: "Iterations", text: obj.sim.options.iterations  });
+					this.simStats.push ( { parameter: "Error", text: obj.sim.options.target_error + '%'  });
 					
+			
+
+					this.simStats.push ( { parameter: "SimC Version", text: obj.version  });
+					this.simStats.push ( { parameter: "SimC Build Date", text: obj.build_date  });
+					this.simStats.push ( { parameter: "SimC Git Revision", text: obj.git_revision  });
+					this.simulationState= 'done';
+		//reinit or it wont be iconized
+		this.$nextTick(function () {
+        		// DOM is now updated
+        		// `this` is bound to the current instance
+		$WowheadPower.init();     	
+		});
+	
 				}
 			}
 				
@@ -743,12 +814,18 @@ computed: {
     			if (response.data.hasOwnProperty('status')){
 				this.charExists = false;
 				this.charData = {};
+				this.charItems = [];
+				this.simStats =[];
+				this.simulationState = '';
+				this.charImg = '';
 		//		temp = `${response.data.reason}`;
 		//		console.log("temp: " + temp);
 		//		return temp;
 			}else if  (response.data.hasOwnProperty('lastModified')){
 				this.charExists = true;
 				this.charData = response.data;
+				this.charImg = "https://render-" + this.region + ".worldofwarcraft.com/character/" + this.charData.thumbnail;
+				this.charImg = this.charImg.replace("avatar","inset");
 						
 
 			}
@@ -774,8 +851,48 @@ watch: {
 			return;
 		console.log("offhand"+ typeof(this.charData.offHand));
 		this.charOffHand = (typeof(this.charData.items.offHand) == 'undefined') ? false : true;
-		
-
+	 	let temp = ["null","warrior","paladin","hunter","rogue","priest","death knight","shaman","mage","warlock","monk","druid","demon hunter"];
+		this.charClass = temp[this.charData.class];
+		temp = [
+  "null",
+  "Human",
+  "Orc",
+  "Dwarf",
+  "Night Elf",
+  "Undead",
+  "Tauren",
+  "Gnome",
+  "Troll",
+  "Goblin",
+  "Blood Elf",
+  "Draenei",
+  "Fel Orc",
+  "Naga",
+  "Broken",
+  "Skeleton",
+  "Vrykul",
+  "Tuskarr",
+  "Forest Troll",
+  "Taunka",
+  "Northrend Skeleton",
+  "Ice Troll",
+  "Worgen",
+  "Gilnean",
+  "Pandaren",
+  "Pandaren",
+  "Pandaren",
+  "Nightborne",
+  "Highmountain Tauren",
+  "Void Elf",
+  "Lightforged Draenei",
+  "Zandalari Troll",
+  "Kul Tiran",
+  "Human",
+  "Dark Iron Dwarf",
+  "Vulpera",
+  "Mag'har Orc"
+]
+		this.charRace = temp[this.charData.race];
 
 		Object.keys(data.items).forEach(function(key) {
 //			console.log(typeof(data.items[key])); 
@@ -814,6 +931,41 @@ watch: {
 img.iconlarge, img.iconmedium, img.icontiny{
 	display: inline-block;
 	vertical-align: middle;
+}
+.no-background{
+	background-color: #0000 !important;
+	font-family: "Avenir Next", Lato, Helvetica, sans-serif !important;
+}
+.paladin{
+    border-left: 5px solid rgb(245, 140, 186);
+}
+.shaman{
+	border-left: 5px solid rgb(0, 112, 222);
+}
+.druid{
+	border-left: 5px solid rgb(255, 125, 10);
+}
+.rogue{
+	border-left: 5px solid rgb(255, 245, 105);
+}
+.demon.hunter{
+	border-left: 5px solid rgb(163, 48, 201);
+}
+.warrior{
+	border-left:5px solid rgb(199, 156, 110);
+}
+.char-name{
+	font-size: 32px !important;
+    	font-weight: 600 !important;
+    	line-height: 1.25 !important;
+    	margin: 0px !important;
+    	letter-spacing: 0.2em !important;
+}
+.char-dps{
+	letter-spacing: 0.2em !important;
+}
+.sim-header{
+	
 }
 </style>
 

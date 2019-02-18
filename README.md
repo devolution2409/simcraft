@@ -108,6 +108,11 @@ CMD ["node","index.js"]
 * Add a timeout of 1 hour cache on full report route
 * Reduce the number of iteration because 1M is a fucking lot
 
+* Finish implementing the css classes for the colored border
+* Implement talent
+* Correct items ilvl
+
+
 ## Find Us
 
 * [GitHub](https://github.com/devolution2409/simcraft)
