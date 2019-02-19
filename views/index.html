@@ -94,11 +94,16 @@ clearable
                 <v-flex xs7>
                   <v-card-title primary-title>
                     <div>
-                      <div class="headline char-name">{{ charData.name.toUpperCase() }} </div> <!-- .split('').join(' ') }}</div> -->
-                      <div  v-if="simulationState == 'before' || simulationState == 'running'">  <v-progress-linear  :indeterminate="true" height="2"></v-progress-linear></div>
-                      <div> {{ charRace.toUpperCase() }} {{ charClass.toUpperCase() }} </div>
-			<div class="chard-dps" v-if="simulationState=='done'"> {{ Math.round(charDps).toLocaleString('en-US') }} DPS</div>
-                    </div>
+                      	<div class="headline char-name">{{ charData.name.toUpperCase() }} </div> <!-- .split('').join(' ') }}</div> -->
+                      	<div  v-if="simulationState == 'before' || simulationState == 'running'">  <v-progress-linear  :indeterminate="true" height="2"></v-progress-linear></div>
+			<div class="text-xs-center caption font-weight-light">
+				<v-chip>  {{  charRace.toUpperCase() }}</v-chip> 	
+				<v-chip>  {{  charClass.toUpperCase() }}</v-chip> 	
+				<v-chip> iLvl: {{  charData.items.averageItemLevelEquipped }}</v-chip> 	
+			 </div>
+			<div class="char-dps text-sm-left" v-if="simulationState=='done'"> {{ Math.round(charDps).toLocaleString('en-US') }} DPS</div>
+                   		
+		    </div>
                   </v-card-title>
                 </v-flex>
               </v-layout>
@@ -113,8 +118,10 @@ clearable
 		</v-layout>
 		<v-layout row justify-space-between>
 			<a href="#" v-for="item in charItems" :data-wowhead="item.wowhead"></a>
- 			<img class="iconmedium" src="/static/images/empty-off-hand.png" v-if="charOffHand == false">
-          		<v-chip > {{ charData.items.averageItemLevelEquipped }}</v-chip>
+ 			<img class="iconmedium" src="/static/images/empty-off-hand.png" v-if="charOffHand == false">	
+		</v-layout>
+		<v-layout row justify-start>
+			<a href="#" v-for="talent in charTalents" :data-wowhead="talent.wowhead"></a>
 		</v-layout>
 	</v-flex>
 	<v-flex xs12 sm3> 
@@ -157,6 +164,7 @@ new Vue({
     character: '',
     charData: {},
     charItems: [],
+    charTalents: [],
     charExists: null,
     charCheck: false,
     charOffHand: false,
@@ -844,8 +852,9 @@ computed: {
 },//end of computed
 watch: {
 	charData: function( data, oldData){
-		console.log(data);
+		//console.log(data);
 		this.charItems = [];
+		this.charTalents =[];
 		// if charData is empty we return
 		if (Object.keys(this.charData).length === 0 && this.charData.constructor === Object)
 			return;
@@ -900,13 +909,17 @@ watch: {
 				// we don't want to display tabard and shirt
 				if ( key !== "tabard" && key !== "shirt"){
 				let temp = data.items[key];
-				temp.wowhead=`item=${data.items[key].id}`; 
+				console.log(temp);
+				temp.wowhead=`item=${data.items[key].id}&ilvl=${data.items[key].itemLevel }`; 
 				this.charItems.push(temp);
 				}
 			}
 		},this);
 
-		
+		Object.keys(data.talents[0].talents).forEach( function(key){
+			this.charTalents.push({ wowhead: 'spell=' + data.talents[0].talents[key].spell.id });			
+
+		},this);
 		
 		//reinit or it wont be iconized
 		this.$nextTick(function () {
