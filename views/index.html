@@ -76,7 +76,7 @@ clearable
     </v-progress-circular> <h1> {{ progressText }} </h1>
 	</v-layout>
 -->
-	<v-layout row justify-space-between v-if="charExists && simulationState != '' && (simulationState == 'before'  || simulationState != 'running' || simulationState =='done' || simulationState == 'error')">
+	<v-layout row justify-space-between v-if="charExists && simulationState != '' && (simulationState == 'before'  || simulationState == 'running' || simulationState =='done' || simulationState == 'error')">
 	<v-flex xs12 sm8>
 		<v-layout row justify-space-between>
 			
@@ -123,6 +123,9 @@ clearable
 		<v-layout row justify-start>
 			<a href="#" v-for="talent in charTalents" :data-wowhead="talent.wowhead"></a>
 		</v-layout>
+		 <v-textarea v-model="this.charPawnString" no-resize readonly>
+              <div slot="label"> Pawn String </div>
+            </v-textarea>
 	</v-flex>
 	<v-flex xs12 sm3> 
   <v-data-table
@@ -172,8 +175,11 @@ new Vue({
     charRace: '',
     charImg: '',
     charDps: '',
+    charScaleFactors: null,
+    charPawnString: null,
     server: '', 
     serverList:[],
+    simFull: null,
     simStats: [],
     simulationState: "",
     progressPercent: 0,
@@ -765,6 +771,7 @@ methods:{
 				this.progressPercentText = obj['current_step'] + "/" + obj['step_namme'] ;
 			 	this.progressText = "Performing step: " + obj['current_step'] + ": " + obj['step_name'] + ". Estimated time: " + obj['estimated_time']	
 				} else if (obj.hasOwnProperty('sim')){
+					this.simFull = obj['sim'];
 					this.progressPercent = 100;
 					this.progressPercentText = "100%";
 					this.progressText = "Simulation over !";
@@ -784,6 +791,32 @@ methods:{
 					this.simStats.push ( { parameter: "SimC Build Date", text: obj.build_date  });
 					this.simStats.push ( { parameter: "SimC Git Revision", text: obj.git_revision  });
 					this.simulationState= 'done';
+					if (obj.sim.players[0].hasOwnProperty('scale_factors')){
+						this.charScaleFactors = obj.sim.players[0].scale_factors;
+						let date = new Date();
+						let primaryString;
+						if (this.charScaleFactors.hasOwnProperty('Str')){
+							primaryString= `Strength=${this.charScaleFactors.Str}`;
+						} else if (this.charScaleFactors.hasOwnProperty('Int')){
+							primaryString= `Intellect=${this.charScaleFactors.Int}`;
+						}else{
+							primaryString= `Agility=${this.charScaleFactors.Agi}`;
+						}
+
+						this.charPawnString =  `( Pawn: v1: "${this.charData.name}  - Balance - ${this.simFull.options.fight_style} - ${date} - (Dis Sedere)": Class=${this.charClass},  ${primaryString}, CritRating=${this.charScaleFactors.Crit}, HasteRating=${this.charScaleFactors.Haste}, MasteryRating=${this.charScaleFactors.Mastery},Versatility=${this.charScaleFactors.Vers}`;
+						// if main hand damage impacts dps (for melee i guess)
+						if (this.charScaleFactors.hasOwnProperty('Wdps')){
+							this.charPawnString = this.charPawnString + `,Dps=${this.charScaleFactors.Wdps}`;	
+						}
+						// if off hand impacts dps 
+						if (this.charScaleFactors.hasOwnProperty('WOHdps')){
+							this.charPawnString = this.charPawnString + `,OffHandDps=${this.charScale.WOHdps};` 
+						}
+						this.charPawnString = this.charPawnString + ")";
+
+ 
+//, Spec=Balance, Intellect=2.02, CritRating=2.46, HasteRating=2.52, MasteryRating=2.44, Versatility=2.43 `)
+					}
 		//reinit or it wont be iconized
 		this.$nextTick(function () {
         		// DOM is now updated
@@ -851,6 +884,8 @@ computed: {
 
 },//end of computed
 watch: {
+
+
 	charData: function( data, oldData){
 		//console.log(data);
 		this.charItems = [];

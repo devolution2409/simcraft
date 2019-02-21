@@ -2,6 +2,7 @@
 let express = require('express');
 let fs = require('fs');
 let app = express();
+let Diff = require('diff');
 const { spawn } = require('child_process');
 const axios = require('axios');
 const oauth = require('axios-oauth-client');
@@ -108,21 +109,34 @@ app.get(/\/(EU|NA|KR|TW)\/\w+\/\w+/i,function(req,res,next){
 let uuid = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 let file = uuid + '.html';
 let json = uuid + '.json';
+let stdoutFilename = uuid + '.stdout';
+let stderrFilename = uuid + '.stderr';
 // variable function here because we need async to be able to await the response before sending it
 var lul = async function(){
 	// calculate_scale_factors=1 requires at least >10000 iterations
 	let armoryString =  "armory=" + infos[0] + "," + infos[1] + "," + infos[2]
 	//const child = spawn ( "../engine/simc", [armoryString,"target_error=0.05","html=" + file,"json=" + json,"calculate_scale_factors=1","iterations=10000","fight_style=patchwerk"]);
-	const child = spawn ( "../engine/simc", [armoryString,"target_error=0.05","html=" + file,"json=" + json,"iterations=10000","fight_style=patchwerk"]);
+	const child = spawn ( "../engine/simc", [armoryString,"target_error=0.05","html=" + file,"json=" + json,"iterations=10000","fight_style=patchwerk","calculate_scale_factors=1",">temp/" + stdoutFilename ,"2>temp/" + stderrFilename],{shell:true});
 	//fetching stdout
 	let currentStep = 0;
 	let stderr = [];
+	/*
 	for await (const err of child.stderr){
 		stderr.push(`${err}`);
-	}
+	}*/
+	let prevData ='';
+	fs.watchFile("temp/" + stdoutFilename,function(){
+		let currData = fs.readFileSync('temp/' + stdoutFilename, 'utf8');	
+		let diff =	 Diff.diffLines(prevData,currData);
+		let data = '';
+		diff.forEach(function(part){
+			process.stdout.write('\033c');
+			console.log(part.value);
+			data = part.value;
+		});
+		prevData = currData;	
+		
 
-
-	for await (const data of child.stdout) {
 		//if (data.includes("Simulating...")){
 	//		console.log(`${data}`);
 	//	}
@@ -149,9 +163,7 @@ var lul = async function(){
 			}	
 		}
 			//console.log("step: " + matches[1] + " " +  matches[2] + "/" + matches[3] + "estimated time:" + matches[5] + matches[6]);
-	}
-	
-
+}); // end fs.watch
 	//adding handler on exit :)
 
 	child.on('exit', (code) => {

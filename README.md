@@ -114,8 +114,8 @@ CMD ["node","index.js"]
 * ~~Implement talent~~
 * ~~Correct items ilvl~~
 * Correct item quality
-
-
+* ~~Pawn string~~
+* Stat weight
 ## Find Us
 
 * [GitHub](https://github.com/devolution2409/simcraft)
