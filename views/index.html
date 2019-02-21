@@ -769,7 +769,7 @@ methods:{
 // 92     progressPercentText: '			
 				this.progressPercent = parseInt(obj['current_step'])/parseInt(obj['maximum_steps']);
 				this.progressPercentText = obj['current_step'] + "/" + obj['step_namme'] ;
-			 	this.progressText = "Performing step: " + obj['current_step'] + ": " + obj['step_name'] + ". Estimated time: " + obj['estimated_time']	
+			 	this.progressText = "Performing step: " + obj['current_step'] + ": " + obj['step_name'];	
 				} else if (obj.hasOwnProperty('sim')){
 					this.simFull = obj['sim'];
 					this.progressPercent = 100;

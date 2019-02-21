@@ -116,6 +116,7 @@ CMD ["node","index.js"]
 * Correct item quality
 * ~~Pawn string~~
 * Stat weight
+* Prevent server from crashing if connection was closed, and server attemps to send a message 
 ## Find Us
 
 * [GitHub](https://github.com/devolution2409/simcraft)
