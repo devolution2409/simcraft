@@ -59,13 +59,27 @@
 
 						<v-layout>
 							<v-flex>
-								<v-select v-model="simFightStyle" v-bind:items="fightStyles" outline class="form-control" label="Fight Style">
+						         <v-subheader class="pl-0">Fight Style</v-subheader>
+								<v-select v-model="simFightStyle" v-bind:items="fightStyles" outline class="form-control">
 								</v-select>
-							</v-flex>	
+							</v-flex>
+							<v-flex>
+						         <v-subheader class="pl-0">Compute Scale Factors</v-subheader>
+								    <v-switch v-model="simGenerateScaleFactors"></v-switch>
+							</v-flex>
+						 <v-flex>
+						         <v-subheader class="pl-0">Iterations</v-subheader>
+						        <v-slider
+						                 v-model="simTargetIterations"
+						          	 thumb-label="always"
+		  						 :min=5000
+		  						 :max=100000
+					          ></v-slider>
+					           </v-flex>			
 						</v-layout>
 
 						<v-layout>
-							<v-btn block color="secondary" dark v-on:click="sim">Run Simulation !</v-btn>
+							<v-btn block color="secondary" dark v-on:click="sim" :disabled="charExists == false" >Run Simulation !</v-btn>
 						</v-layout>	
 						<!-- <v-layout row align-center justify-space-between>
 	      <v-progress-circular
@@ -128,7 +142,7 @@
 								<v-layout row justify-start>
 									<a href="#" v-for="talent in charTalents" :data-wowhead="talent.wowhead"></a>
 								</v-layout>
-								<v-layout column>
+								<v-layout column v-if="simGenerateScaleFactors == true">
 									<v-flex xs5>
 										<v-data-table  :items="charWeight"  class="elevation-24" hide-actions  >
 											<template slot="headers" slot-scope="props">	<th class="sim-header">Stats Weight</th>    </template>
@@ -171,10 +185,23 @@
 						</v-layout>
 						
 						<v-layout column align-center v-if="simulationState == 'done'">
-							<v-flex>{{ this.character }} Damages Sources </v-flex>
+							<v-flex>{{ this.character.charAt(0).toUpperCase() + this.character.slice(1) }}'s Damage Sources </v-flex>
+							<v-layout row align-center>
 							<v-flex style="text-align:center;">
 							<div style="height:500px; width:500px;">   	<sunburst-chart :data = 'simDamageSource' :config = 'sunburstConfig'></sunburst-chart> </div>
 							</v-flex>
+							<v-flex>
+								<!--²	<div v-for="thing in simDamageSourceText">{{ thing.spell }}: {{ parseFloat(thing.percent*100).toFixed(2) }}%</div> -->
+										<v-data-table  :items="simDamageSourceText"  class="elevation-24" hide-actions  >
+											<template slot="headers" slot-scope="props">	<th class="sim-header" colspan=2>Damage Sources</th>    </template>
+											<template slot="items" slot-scope="props">
+												<td> {{ props.item.spell }} </td>
+												<td> {{ parseFloat(props.item.percent * 100).toFixed(2) }}%</td>
+											</template>
+										</v-data-table>
+
+							</v-flex>
+							</v-layout>
 						</v-layout>
 							</v-container>
 						</v-content>
@@ -228,7 +255,7 @@ new Vue({
 		charData: {},
 		charItems: [],
 		charTalents: [],
-		charExists: null,
+		charExists: false,
 		charCheck: false,
 		charOffHand: false,
 		charClass: '',
@@ -243,9 +270,12 @@ new Vue({
 		simFull: null,
 		simStats: [],
 		simDamageSource: {},
+		simDamageSourceText: [],
 		simulationState: "",
+		// simulations options
 		simFightStyle: 'Patchwerk',
-
+		simGenerateScaleFactors: false,
+		simTargetIterations: 10000,
 
 		progressPercent: 0,
 		progressPercentText: '',
@@ -914,15 +944,23 @@ new Vue({
 							let stats = obj.sim.players[0].stats;
 							let temp = [];
 							stats.forEach( function(el){
-								temp.push( {
-									label: el.name,
-									size: el.portion_amount,
-								});
-								
+								if (el.portion_amount != undefined){
+									temp.push( {
+										label: el.name,
+										size: el.portion_amount,
+									});
+									this.simDamageSourceText.push({
+										spell: el.name,
+										percent: el.portion_amount,
+									});
+								}
 
 								},this);
-							console.log("NIIIIGGER");
-							console.log(temp);
+							//sorting damage source text
+							this.simDamageSourceText.sort( (a,b) =>{
+								return b.percent  - a.percent;
+							});
+
 							this.simDamageSource = {
 								label: 'root',
 								children: temp,
@@ -962,7 +1000,7 @@ new Vue({
 						if ( this.region == '' || this.server == ''){
 							return true;
 						}
-
+						this.charExists = false;
 						axios.get('/' + this.region + '/' + this.server + '/' + v + '/check_existence')
 							.then( (response) => {
 								if (response.data.hasOwnProperty('status')){
