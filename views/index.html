@@ -1,978 +1,1091 @@
 <!DOCTYPE html>
 <html>
 
-<head>
-<!-- 4Head -->
-<!-- <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
-<link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"/>
--->
+	<head>
+		<!-- 4Head -->
+		<!-- <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css"/>
+	  <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"/>
+		-->
 
-  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+		<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+		<link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 
-<!-- development version, includes helpful console warnings -->
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
-<script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
+		<!-- development version, includes helpful console warnings -->
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+		<script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
 
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script> 
-<!-- wowhead forsenE -->
-<script>var whTooltips = {colorLinks: true, iconizeLinks: true, renameLinks: false, iconSize:"medium"};</script>
-<script src="http://wow.zamimg.com/widgets/power.js"></script>
-<title> Simcraft wrapper </title>
+		<script src="https://unpkg.com/axios/dist/axios.min.js"></script> 
+		<!-- wowhead forsenE -->
+		<script>var whTooltips = {colorLinks: true, iconizeLinks: true, renameLinks: false, iconSize:"medium"};</script>
+		<script src="http://wow.zamimg.com/widgets/power.js"></script>
+		<title> Simcraft wrapper </title>
+		<script src="https://unpkg.com/vue-d2b@1.0.15/dist/vue-d2b.min.js"></script> 
 
-</head>
 
-<body>
-<div id="app">
-<v-app dark fluid ma-0 pa-0 fill-height>
-      <v-content>
-	<v-container>
-	  <v-layout row justify-space-between>
-    	    <v-flex  xs12 sm12 md3>
-			<v-select class="form-control"  outline v-model="region" v-bind:items="regions" @change="regionSelected" label="Choose a region">
-			</v-select>
-     	    
-	    </v-flex>
-    	    <v-flex  xs12 sm12 md4>
-			<v-autocomplete class="form-control" :menu-props="{ auto: true }" outline v-model="server" v-bind:items="serverList" no-data-text="Please select a region first" label="Choose a server">
-			</v-autocomplete>
-     	   </v-flex> 
-	   <v-flex xs12 sm12 md3>
-          	<v-text-field v-model="character"
-            counter="25"
-            label="Character Name"
-            outline
-maxlength="25"
-v-bind:append-outer-icon="charValidator"
-:rules="charRules"
-clearable
-@change="charTyped"
-          >
+	</head>
+
+	<body>
+		<div id="app">
+			<v-app dark fluid ma-0 pa-0 fill-height>
+				<v-content>
+					<v-container>
+						<v-layout row justify-space-between>
+							<v-flex  xs12 sm12 md3>
+								<v-select class="form-control"  outline v-model="region" v-bind:items="regions" @change="regionSelected" label="Choose a region">
+								</v-select>
+
+							</v-flex>
+							<v-flex  xs12 sm12 md4>
+								<v-autocomplete class="form-control" :menu-props="{ auto: true }" outline v-model="server" v-bind:items="serverList" no-data-text="Please select a region first" label="Choose a server">
+								</v-autocomplete>
+							</v-flex> 
+							<v-flex xs12 sm12 md3>
+								<v-text-field v-model="character"
+		      counter="25"
+	label="Character Name"
+ outline
+ maxlength="25"
+ v-bind:append-outer-icon="charValidator"
+ :rules="charRules"
+ clearable
+ @change="charTyped"
+ >
  <v-progress-linear :indeterminate="true"  v-if:="charCheck"></v-progress-linear>
-</v-text-field>
-        </v-flex>
-	 </v-layout>
-<v-layout>
-<v-btn block color="secondary" dark v-on:click="sim">Run Simulation !</v-btn>
-</v-layout>	
-<!-- <v-layout row align-center justify-space-between>
-<v-progress-circular
-      indeterminate
-      color="amber"
-      :size="100"
-       v-if="simulationState =='before'"
-    ></v-progress-circular>
- <v-progress-circular
-      :rotate="360"
-      :size="100"
-      :width="15"
-      :value="progressPercent"
-      color="teal"
-      v-if="simulationState == 'running'"
-    >
-      {{ progressPercentText }}
-    </v-progress-circular> <h1> {{ progressText }} </h1>
-	</v-layout>
--->
-	<v-layout row justify-space-between v-if="charExists && simulationState != '' && (simulationState == 'before'  || simulationState == 'running' || simulationState =='done' || simulationState == 'error')">
-	<v-flex xs12 sm8>
-		<v-layout row justify-space-between>
-			
+								</v-text-field>
+							</v-flex>
+						</v-layout>
 
-          <v-flex xs10>
-            <v-card class="white--text no-background elevation-24">
-              <v-layout>
-                <v-flex xs5 :class="charClass">
-                  <v-img
-                    :src="charImg"
-                    height="125px"
-                    contain
-                  ></v-img>
-                </v-flex>
-                <v-flex xs7>
-                  <v-card-title primary-title>
-                    <div>
-                      	<div class="headline char-name">{{ charData.name.toUpperCase() }} </div> <!-- .split('').join(' ') }}</div> -->
-                      	<div  v-if="simulationState == 'before' || simulationState == 'running'">  <v-progress-linear  :indeterminate="true" height="2"></v-progress-linear></div>
-			<div class="text-xs-center caption font-weight-light">
-				<v-chip>  {{  charRace.toUpperCase() }}</v-chip> 	
-				<v-chip>  {{  charClass.toUpperCase() }}</v-chip> 	
-				<v-chip> iLvl: {{  charData.items.averageItemLevelEquipped }}</v-chip> 	
-			 </div>
-			<div class="char-dps text-sm-left" v-if="simulationState=='done'"> {{ Math.round(charDps).toLocaleString('en-US') }} DPS</div>
-                   		
-		    </div>
-                  </v-card-title>
-                </v-flex>
-              </v-layout>
-              <v-divider light></v-divider>
-            </v-card>
-          </v-flex>
-	<!--		<v-flex sm4> <img :src="charImg"> </v-flex>
-			<v-flex sm8>
-				<h1> {{ charData.name.toUpperCase().split('').join(' ') }} </h1>
-				<h2> 120202 </h2>
-			</v-flex>--> 
-		</v-layout>
-		<v-layout row justify-space-between>
-			<a href="#" v-for="item in charItems" :data-wowhead="item.wowhead"></a>
- 			<img class="iconmedium" src="/static/images/empty-off-hand.png" v-if="charOffHand == false">	
-		</v-layout>
-		<v-layout row justify-start>
-			<a href="#" v-for="talent in charTalents" :data-wowhead="talent.wowhead"></a>
-		</v-layout>
-		 <v-textarea v-model="this.charPawnString" no-resize readonly>
-              <div slot="label"> Pawn String </div>
-            </v-textarea>
-	</v-flex>
-	<v-flex xs12 sm3> 
-  <v-data-table
-    hide-actions
-    :items="simStats"
-    class="elevation-24"
+						<v-layout>
+							<v-flex>
+								<v-select v-model="simFightStyle" v-bind:items="fightStyles" outline class="form-control" label="Fight Style">
+								</v-select>
+							</v-flex>	
+						</v-layout>
+
+						<v-layout>
+							<v-btn block color="secondary" dark v-on:click="sim">Run Simulation !</v-btn>
+						</v-layout>	
+						<!-- <v-layout row align-center justify-space-between>
+	      <v-progress-circular
+	      indeterminate
+	      color="amber"
+	      :size="100"
+	      v-if="simulationState =='before'"
+	      ></v-progress-circular>
+	      <v-progress-circular
+	      :rotate="360"
+	      :size="100"
+	      :width="15"
+	      :value="progressPercent"
+	      color="teal"
+	      v-if="simulationState == 'running'"
+	      >
+	      {{ progressPercentText }}
+	      </v-progress-circular> <h1> {{ progressText }} </h1>
+	      </v-layout>
+						-->
+						<v-layout row justify-space-between v-if="charExists && simulationState != '' && (simulationState == 'before'  || simulationState == 'running' || simulationState =='done' || simulationState == 'error')">
+							<v-flex xs12 sm8>
+								<v-layout row justify-space-between>
+
+
+									<v-flex xs10>
+										<v-card class="white--text no-background elevation-24">
+											<v-layout>
+												<v-flex xs5> <!-- :class="charClass"> -->
+													<v-img :class="charClass"
+		  :src="charImg"
+		  height="125px"
+    contain
+    ></v-img>
+												</v-flex>
+												<v-flex xs7>
+													<v-card-title primary-title>
+														<div>
+															<div class="headline char-name">{{ charData.name.toUpperCase() }}</div> <!-- .split('').join(' ') }}</div> -->
+															<div  v-if="simulationState == 'before' || simulationState == 'running'">  <v-progress-linear  :indeterminate="true" height="2"></v-progress-linear></div>
+															<div class="text-xs-center caption font-weight-light">
+																<v-chip>{{ charRace.toUpperCase() }}</v-chip> 	
+																<v-chip>{{ charClass.toUpperCase() }}</v-chip> 	
+																<v-chip>iLvl: {{ charData.items.averageItemLevelEquipped }}</v-chip> 	
+															</div>
+															<div class="char-dps text-sm-left" v-if="simulationState=='done'">{{ Math.round(charDps).toLocaleString('en-US') }} DPS</div>
+
+		</div>
+													</v-card-title>
+												</v-flex>
+											</v-layout>
+											<v-divider light></v-divider>
+										</v-card>
+									</v-flex>
+								</v-layout>
+								<v-layout row justify-start>
+									<a href="#" v-for="item in charItems" :data-wowhead="item.wowhead"></a>
+									<img class="iconmedium" src="/static/images/empty-off-hand.png" v-if="charOffHand == false">	
+								</v-layout>
+								<v-layout row justify-start>
+									<a href="#" v-for="talent in charTalents" :data-wowhead="talent.wowhead"></a>
+								</v-layout>
+								<v-layout column>
+									<v-flex xs5>
+										<v-data-table  :items="charWeight"  class="elevation-24" hide-actions  >
+											<template slot="headers" slot-scope="props">	<th class="sim-header">Stats Weight</th>    </template>
+
+											<template slot="no-data">   <v-progress-linear  :indeterminate="true" height="2"></v-progress-linear> </template> 
+
+											<template slot="items" slot-scope="props">
+												<td> {{ props.item.name }} {{ parseFloat(props.item.value).toFixed(2) }}</td>
+											</template>
+										</v-data-table>
+									</v-flex>
+									<v-flex xs5>
+
+										<v-textarea v-model="charPawnString" no-resize readonly outline>
+											<div slot="label"> Pawn String </div>
+										</v-textarea>
+									</v-flex>
+								</v-layout>
+							</v-flex>
+							<v-flex xs12 sm3> 
+								<v-data-table
+		hide-actions
+		:items="simStats"
+		class="elevation-24"
   >
-    <template slot="headers" slot-scope="props">
-      <th colspan=2 class="sim-header">Simulation Details</th>
-    </template>
-    <template slot="no-data">
-   <v-progress-linear  :indeterminate="true" height="2"></v-progress-linear> 
-	{{ progressText }}</div>
-	
-	</template>
-	
-    <template slot="items" slot-scope="props">
-     <td class="text-xs-left">{{ props.item.parameter }}  </td> <td class="text-xs-right">{{ props.item.text }} </td>
-    </template>
-  </v-data-table>
-	</v-flex>
+  <template slot="headers" slot-scope="props">
+	  <th colspan=2 class="sim-header">Simulation Details</th>
+  </template>
+  <template slot="no-data">
+	  <v-progress-linear  :indeterminate="true" height="2"></v-progress-linear>{{ progressText }}</div>
 
-	</v-layout>
-	<v-container>
-      </v-content>
-</v-app>
-<!--			<button type="button" v-on:click="sim" class="btn btn-primary">Go!</button>
--->
-</div>
+  </template>
+
+  <template slot="items" slot-scope="props">
+	  <td class="text-xs-left">{{ props.item.parameter }}  </td> <td class="text-xs-right">{{ props.item.text }} </td>
+  </template>
+								</v-data-table>
+							</v-flex>
+
+						</v-layout>
+						
+						<v-layout column align-center v-if="simulationState == 'done'">
+							<v-flex>{{ this.character }} Damages Sources </v-flex>
+							<v-flex style="text-align:center;">
+							<div style="height:500px; width:500px;">   	<sunburst-chart :data = 'simDamageSource' :config = 'sunburstConfig'></sunburst-chart> </div>
+							</v-flex>
+						</v-layout>
+							</v-container>
+						</v-content>
+					</v-app>
+					<!--			<button type="button" v-on:click="sim" class="btn btn-primary">Go!</button>
+					-->
+					</div>
 
 
-<script>
+					<script>
 // cant use import cause ES5 LUL
 //import axios from 'axios';
 new Vue({
-  el: '#app',
-  data: {
-    region: '',
-    character: '',
-    charData: {},
-    charItems: [],
-    charTalents: [],
-    charExists: null,
-    charCheck: false,
-    charOffHand: false,
-    charClass: '',
-    charRace: '',
-    charImg: '',
-    charDps: '',
-    charScaleFactors: null,
-    charPawnString: null,
-    server: '', 
-    serverList:[],
-    simFull: null,
-    simStats: [],
-    simulationState: "",
-    progressPercent: 0,
-    progressPercentText: '',
-    progressText: '',
-    regions:['EU','US','KR'],
+	el: '#app',
+		components: {
+			    'sunburst-chart': vued2b.ChartSunburst
+				      },
 
-    servers:{ EU: [
-"Aerie Peak",
-"Agamaggan",
-"Aggra (Português)",
-"Aggramar",
-"Ahn'Qiraj",
-"Al'Akir",
-"Alexstrasza",
-"Alleria",
-"Alonsus",
-"Aman'Thul",
-"Ambossar",
-"Anachronos",
-"Anetheron",
-"Antonidas",
-"Anub'arak",
-"Arak-arahm",
-"Arathi",
-"Arathor",
-"Archimonde",
-"Area 52",
-"Argent Dawn",
-"Arthas",
-"Arygos",
-"Ashenvale",
-"Aszune",
-"Auchindoun",
-"Azjol-Nerub",
-"Azshara",
-"Azuregos",
-"Azuremyst",
-"Baelgun",
-"Balnazzar",
-"Blackhand",
-"Blackmoore",
-"Blackrock",
-"Blackscar",
-"Blade's Edge",
-"Bladefist",
-"Bloodfeather",
-"Bloodhoof",
-"Bloodscalp",
-"Blutkessel",
-"Booty Bay",
-"Borean Tundra",
-"Boulderfist",
-"Bronze Dragonflight",
-"Bronzebeard",
-"Burning Blade",
-"Burning Legion",
-"Burning Steppes",
-"C'Thun",
-"Chamber of Aspects",
-"Chants éternels",
-"Cho'gall",
-"Chromaggus",
-"Colinas Pardas",
-"Confrérie du Thorium",
-"Conseil des Ombres",
-"Crushridge",
-"Culte de la Rive noire",
-"Daggerspine",
-"Dalaran",
-"Dalvengyr",
-"Darkmoon Faire",
-"Darksorrow",
-"Darkspear",
-"Das Konsortium",
-"Das Syndikat",
-"Deathguard",
-"Deathweaver",
-"Deathwing",
-"Deepholm",
-"Defias Brotherhood",
-"Dentarg",
-"Der Mithrilorden",
-"Der Rat von Dalaran",
-"Der abyssische Rat",
-"Destromath",
-"Dethecus",
-"Die Aldor",
-"Die Arguswacht",
-"Die Nachtwache",
-"Die Silberne Hand",
-"Die Todeskrallen",
-"Die ewige Wacht",
-"Doomhammer",
-"Draenor",
-"Dragonblight",
-"Dragonmaw",
-"Drak'thul",
-"Drek'Thar",
-"Dun Modr",
-"Dun Morogh",
-"Dunemaul",
-"Durotan",
-"Earthen Ring",
-"Echsenkessel",
-"Eitrigg",
-"Eldre'Thalas",
-"Elune",
-"Emerald Dream",
-"Emeriss",
-"Eonar",
-"Eredar",
-"Eversong",
-"Executus",
-"Exodar",
-"Festung der Stürme",
-"Fordragon",
-"Forscherliga",
-"Frostmane",
-"Frostmourne",
-"Frostwhisper",
-"Frostwolf",
-"Galakrond",
-"Garona",
-"Garrosh",
-"Genjuros",
-"Ghostlands",
-"Gilneas",
-"Goldrinn",
-"Gordunni",
-"Gorgonnash",
-"Greymane",
-"Grim Batol",
-"Grom",
-"Gul'dan",
-"Hakkar",
-"Haomarush",
-"Hellfire",
-"Hellscream",
-"Howling Fjord",
-"Hyjal",
-"Illidan",
-"Jaedenar",
-"Kael'thas",
-"Karazhan",
-"Kargath",
-"Kazzak",
-"Kel'Thuzad",
-"Khadgar",
-"Khaz Modan",
-"Khaz'goroth",
-"Kil'jaeden",
-"Kilrogg",
-"Kirin Tor",
-"Kor'gall",
-"Krag'jin",
-"Krasus",
-"Kul Tiras",
-"Kult der Verdammten",
-"La Croisade écarlate",
-"Laughing Skull",
-"Les Clairvoyants",
-"Les Sentinelles",
-"Lich King",
-"Lightbringer",
-"Lightning's Blade",
-"Lordaeron",
-"Los Errantes",
-"Lothar",
-"Madmortem",
-"Magtheridon",
-"Mal'Ganis",
-"Malfurion",
-"Malorne",
-"Malygos",
-"Mannoroth",
-"Marécage de Zangar",
-"Mazrigos",
-"Medivh",
-"Minahonda",
-"Moonglade",
-"Mug'thol",
-"Nagrand",
-"Nathrezim",
-"Naxxramas",
-"Nazjatar",
-"Nefarian",
-"Nemesis",
-"Neptulon",
-"Ner'zhul",
-"Nera'thor",
-"Nethersturm",
-"Nordrassil",
-"Norgannon",
-"Nozdormu",
-"Onyxia",
-"Outland",
-"Perenolde",
-"Pozzo dell'Eternità",
-"Proudmoore",
-"Quel'Thalas",
-"Ragnaros",
-"Rajaxx",
-"Rashgarroth",
-"Ravencrest",
-"Ravenholdt",
-"Razuvious",
-"Rexxar",
-"Runetotem",
-"Sanguino",
-"Sargeras",
-"Saurfang",
-"Scarshield Legion",
-"Sen'jin",
-"Shadowsong",
-"Shattered Halls",
-"Shattered Hand",
-"Shattrath",
-"Shen'dralar",
-"Silvermoon",
-"Sinstralis",
-"Skullcrusher",
-"Soulflayer",
-"Spinebreaker",
-"Sporeggar",
-"Steamwheedle Cartel",
-"Stormrage",
-"Stormreaver",
-"Stormscale",
-"Sunstrider",
-"Suramar",
-"Sylvanas",
-"Taerar",
-"Talnivarr",
-"Tarren Mill",
-"Teldrassil",
-"Temple noir",
-"Terenas",
-"Terokkar",
-"Terrordar",
-"The Maelstrom",
-"The Sha'tar",
-"The Venture Co",
-"Theradras",
-"Thermaplugg",
-"Thrall",
-"Throk'Feroth",
-"Thunderhorn",
-"Tichondrius",
-"Tirion",
-"Todeswache",
-"Trollbane",
-"Turalyon",
-"Twilight's Hammer",
-"Twisting Nether",
-"Tyrande",
-"Uldaman",
-"Ulduar",
-"Uldum",
-"Un'Goro",
-"Varimathras",
-"Vashj",
-"Vek'lor",
-"Vek'nilash",
-"Vol'jin",
-"Wildhammer",
-"Wrathbringer",
-"Xavius",
-"Ysera",
-"Ysondre",
-"Zenedar",
-"Zirkel des Cenarius",
-"Zul'jin",
-"Zuluhed"
-],
-	US:[
-"Aerie Peak",
-"Agamaggan",
-"Aggramar",
-"Akama",
-"Alexstrasza",
-"Alleria",
-"Altar of Storms",
-"Alterac Mountains",
-"Aman'Thul",
-"Andorhal",
-"Anetheron",
-"Antonidas",
-"Anub'arak",
-"Anvilmar",
-"Arathor",
-"Archimonde",
-"Area 52",
-"Argent Dawn",
-"Arthas",
-"Arygos",
-"Auchindoun",
-"Azgalor",
-"Azjol-Nerub",
-"Azralon",
-"Azshara",
-"Azuremyst",
-"Baelgun",
-"Balnazzar",
-"Barthilas",
-"Black Dragonflight",
-"Blackhand",
-"Blackrock",
-"Blackwater Raiders",
-"Blackwing Lair",
-"Blade's Edge",
-"Bladefist",
-"Bleeding Hollow",
-"Blood Furnace",
-"Bloodhoof",
-"Bloodscalp",
-"Bonechewer",
-"Borean Tundra",
-"Boulderfist",
-"Bronzebeard",
-"Burning Blade",
-"Burning Legion",
-"Caelestrasz",
-"Cairne",
-"Cenarion Circle",
-"Cenarius",
-"Cho'gall",
-"Chromaggus",
-"Coilfang",
-"Crushridge",
-"Daggerspine",
-"Dalaran",
-"Dalvengyr",
-"Dark Iron",
-"Darkspear",
-"Darrowmere",
-"Dath'Remar",
-"Dawnbringer",
-"Deathwing",
-"Demon Soul",
-"Dentarg",
-"Destromath",
-"Dethecus",
-"Detheroc",
-"Doomhammer",
-"Draenor",
-"Dragonblight",
-"Dragonmaw",
-"Drak'Tharon",
-"Drak'thul",
-"Draka",
-"Drakkari",
-"Dreadmaul",
-"Drenden",
-"Dunemaul",
-"Durotan",
-"Duskwood",
-"Earthen Ring",
-"Echo Isles",
-"Eitrigg",
-"Eldre'Thalas",
-"Elune",
-"Emerald Dream",
-"Eonar",
-"Eredar",
-"Executus",
-"Exodar",
-"Farstriders",
-"Feathermoon",
-"Fenris",
-"Firetree",
-"Fizzcrank",
-"Frostmane",
-"Frostmourne",
-"Frostwolf",
-"Galakrond",
-"Gallywix",
-"Garithos",
-"Garona",
-"Garrosh",
-"Ghostlands",
-"Gilneas",
-"Gnomeregan",
-"Goldrinn",
-"Gorefiend",
-"Gorgonnash",
-"Greymane",
-"Grizzly Hills",
-"Gul'dan",
-"Gundrak",
-"Gurubashi",
-"Hakkar",
-"Haomarush",
-"Hellscream",
-"Hydraxis",
-"Hyjal",
-"Icecrown",
-"Illidan",
-"Jaedenar",
-"Jubei'Thos",
-"Kael'thas",
-"Kalecgos",
-"Kargath",
-"Kel'Thuzad",
-"Khadgar",
-"Khaz Modan",
-"Khaz'goroth",
-"Kil'jaeden",
-"Kilrogg",
-"Kirin Tor",
-"Korgath",
-"Korialstrasz",
-"Kul Tiras",
-"Laughing Skull",
-"Lethon",
-"Lightbringer",
-"Lightning's Blade",
-"Lightninghoof",
-"Llane",
-"Lothar",
-"Madoran",
-"Maelstrom",
-"Magtheridon",
-"Maiev",
-"Mal'Ganis",
-"Malfurion",
-"Malorne",
-"Malygos",
-"Mannoroth",
-"Medivh",
-"Misha",
-"Mok'Nathal",
-"Moon Guard",
-"Moonrunner",
-"Mug'thol",
-"Muradin",
-"Nagrand",
-"Nathrezim",
-"Nazgrel",
-"Nazjatar",
-"Nemesis",
-"Ner'zhul",
-"Nesingwary",
-"Nordrassil",
-"Norgannon",
-"Onyxia",
-"Perenolde",
-"Proudmoore",
-"Quel'Thalas",
-"Quel'dorei",
-"Ragnaros",
-"Ravencrest",
-"Ravenholdt",
-"Rexxar",
-"Rivendare",
-"Runetotem",
-"Sargeras",
-"Saurfang",
-"Scarlet Crusade",
-"Scilla",
-"Sen'jin",
-"Sentinels",
-"Shadow Council",
-"Shadowmoon",
-"Shadowsong",
-"Shandris",
-"Shattered Halls",
-"Shattered Hand",
-"Shu'halo",
-"Silver Hand",
-"Silvermoon",
-"Sisters of Elune",
-"Skullcrusher",
-"Skywall",
-"Smolderthorn",
-"Spinebreaker",
-"Spirestone",
-"Staghelm",
-"Steamwheedle Cartel",
-"Stonemaul",
-"Stormrage",
-"Stormreaver",
-"Stormscale",
-"Suramar",
-"Tanaris",
-"Terenas",
-"Terokkar",
-"Thaurissan",
-"The Forgotten Coast",
-"The Scryers",
-"The Underbog",
-"The Venture Co",
-"Thorium Brotherhood",
-"Thrall",
-"Thunderhorn",
-"Thunderlord",
-"Tichondrius",
-"Tol Barad",
-"Tortheldrin",
-"Trollbane",
-"Turalyon",
-"Twisting Nether",
-"Uldaman",
-"Uldum",
-"Undermine",
-"Ursin",
-"Uther",
-"Vashj",
-"Vek'nilash",
-"Velen",
-"Warsong",
-"Whisperwind",
-"Wildhammer",
-"Windrunner",
-"Winterhoof",
-"Wyrmrest Accord",
-"Ysera",
-"Ysondre",
-"Zangarmarsh",
-"Zul'jin",
-"Zuluhed"
-],
- KR:[
-"굴단",
-"노르간논",
-"달라란",
-"데스윙",
-"듀로탄",
-"렉사르",
-"말퓨리온",
-"불타는 군단",
-"세나리우스",
-"스톰레이지",
-"아즈샤라",
-"알렉스트라자",
-"와일드해머",
-"윈드러너",
-"줄진",
-"하이잘",
-"헬스크림"
-],
-},
-		
-  }, //end of data
-methods:{
-	regionSelected:function(){
-		this.server = '';
-		this.serverList = this.servers[this.region];
-	},
-	sim:function(){
-		this.simulationState = 'before';
-		this.progressText = "Sending simulation request to server!"
-		this.simStats = [];
-		
-		let url = '/' + this.region + '/' + this.server + '/' + this.character;
-		var source = new EventSource(url);
-		source.onopen = function() {
-				
-		
+	data: {
 
-		};
-		//reinit or it wont be iconized
-		this.$nextTick(function () {
-        		// DOM is now updated
-        		// `this` is bound to the current instance
-		$WowheadPower.init();     	
-		});
+		    sunburstConfig: function (chart) {
+			    // just a hack to call the breadcrumb html generator ONCE (single value)
+			   //chart.breadcrumbs().values([0]);
 
-		source.onerror = function (error) {
-			console.log("error:" + error);
-			source.close();
-		};
-		source.onmessage = (evt) =>{
-			this.simulationState=='running';
-			//console.log(evt.data);
-			let obj = JSON.parse(evt.data);
-			console.log(obj);
-			// if it's an error message
-			if (obj.hasOwnProperty('error')){
-				this.progressText = obj['error'];
-				this.sumulationState = 'error',
+			chart.chartFrame().breadcrumbsEnabled(false);			
+			chart.tooltip().html( (d) => {
+				//those will always be 0.XX format
+			
+			    const percent = d.value / d.selected.value;
+			    const percentText = percent > 1 ?
+				        '' :
+					    `<div class = 'd2b-sunburst-percent'>
+					    ${parseFloat(percent*100).toFixed(2)}%
+			        </div>`;
+
+				  return `
+						      <div class = 'd2b-sunburst-label'>
+					        	    ${d.label}
+						      </div>
+					          	<div class = 'd2b-sunburst-value'>
+				            			${percentText}
+					        	</div>
+							  `;
+				});
+		    	},
+
+
+
+		region: '',
+		character: '',
+		charData: {},
+		charItems: [],
+		charTalents: [],
+		charExists: null,
+		charCheck: false,
+		charOffHand: false,
+		charClass: '',
+		charRace: '',
+		charImg: '',
+		charDps: '',
+		charScaleFactors: null,
+		charPawnString: null,
+		charWeight: [],
+		server: '', 
+		serverList:[],
+		simFull: null,
+		simStats: [],
+		simDamageSource: {},
+		simulationState: "",
+		simFightStyle: 'Patchwerk',
+
+
+		progressPercent: 0,
+		progressPercentText: '',
+		progressText: '',
+
+		fightStyles:['Patchwerk','Hectic Add Cleave','Light Movement','Heavy Movement','Casting Patchwerk','Cleave Add','Helter Skelter','Dungeon Slice (BETA)','Beastlord','Ultraxion'],
+		regions:['EU','US','KR'],
+
+		servers:{ EU: [
+			"Aerie Peak",
+			"Agamaggan",
+			"Aggra (Português)",
+			"Aggramar",
+			"Ahn'Qiraj",
+			"Al'Akir",
+			"Alexstrasza",
+			"Alleria",
+			"Alonsus",
+			"Aman'Thul",
+			"Ambossar",
+			"Anachronos",
+			"Anetheron",
+			"Antonidas",
+			"Anub'arak",
+			"Arak-arahm",
+			"Arathi",
+			"Arathor",
+			"Archimonde",
+			"Area 52",
+			"Argent Dawn",
+			"Arthas",
+			"Arygos",
+			"Ashenvale",
+			"Aszune",
+			"Auchindoun",
+			"Azjol-Nerub",
+			"Azshara",
+			"Azuregos",
+			"Azuremyst",
+			"Baelgun",
+			"Balnazzar",
+			"Blackhand",
+			"Blackmoore",
+			"Blackrock",
+			"Blackscar",
+			"Blade's Edge",
+			"Bladefist",
+			"Bloodfeather",
+			"Bloodhoof",
+			"Bloodscalp",
+			"Blutkessel",
+			"Booty Bay",
+			"Borean Tundra",
+			"Boulderfist",
+			"Bronze Dragonflight",
+			"Bronzebeard",
+			"Burning Blade",
+			"Burning Legion",
+			"Burning Steppes",
+			"C'Thun",
+			"Chamber of Aspects",
+			"Chants éternels",
+			"Cho'gall",
+			"Chromaggus",
+			"Colinas Pardas",
+			"Confrérie du Thorium",
+			"Conseil des Ombres",
+			"Crushridge",
+			"Culte de la Rive noire",
+			"Daggerspine",
+			"Dalaran",
+			"Dalvengyr",
+			"Darkmoon Faire",
+			"Darksorrow",
+			"Darkspear",
+			"Das Konsortium",
+			"Das Syndikat",
+			"Deathguard",
+			"Deathweaver",
+			"Deathwing",
+			"Deepholm",
+			"Defias Brotherhood",
+			"Dentarg",
+			"Der Mithrilorden",
+			"Der Rat von Dalaran",
+			"Der abyssische Rat",
+			"Destromath",
+			"Dethecus",
+			"Die Aldor",
+			"Die Arguswacht",
+			"Die Nachtwache",
+			"Die Silberne Hand",
+			"Die Todeskrallen",
+			"Die ewige Wacht",
+			"Doomhammer",
+			"Draenor",
+			"Dragonblight",
+			"Dragonmaw",
+			"Drak'thul",
+			"Drek'Thar",
+			"Dun Modr",
+			"Dun Morogh",
+			"Dunemaul",
+			"Durotan",
+			"Earthen Ring",
+			"Echsenkessel",
+			"Eitrigg",
+			"Eldre'Thalas",
+			"Elune",
+			"Emerald Dream",
+			"Emeriss",
+			"Eonar",
+			"Eredar",
+			"Eversong",
+			"Executus",
+			"Exodar",
+			"Festung der Stürme",
+			"Fordragon",
+			"Forscherliga",
+			"Frostmane",
+			"Frostmourne",
+			"Frostwhisper",
+			"Frostwolf",
+			"Galakrond",
+			"Garona",
+			"Garrosh",
+			"Genjuros",
+			"Ghostlands",
+			"Gilneas",
+			"Goldrinn",
+			"Gordunni",
+			"Gorgonnash",
+			"Greymane",
+			"Grim Batol",
+			"Grom",
+			"Gul'dan",
+			"Hakkar",
+			"Haomarush",
+			"Hellfire",
+			"Hellscream",
+			"Howling Fjord",
+			"Hyjal",
+			"Illidan",
+			"Jaedenar",
+			"Kael'thas",
+			"Karazhan",
+			"Kargath",
+			"Kazzak",
+			"Kel'Thuzad",
+			"Khadgar",
+			"Khaz Modan",
+			"Khaz'goroth",
+			"Kil'jaeden",
+			"Kilrogg",
+			"Kirin Tor",
+			"Kor'gall",
+			"Krag'jin",
+			"Krasus",
+			"Kul Tiras",
+			"Kult der Verdammten",
+			"La Croisade écarlate",
+			"Laughing Skull",
+			"Les Clairvoyants",
+			"Les Sentinelles",
+			"Lich King",
+			"Lightbringer",
+			"Lightning's Blade",
+			"Lordaeron",
+			"Los Errantes",
+			"Lothar",
+			"Madmortem",
+			"Magtheridon",
+			"Mal'Ganis",
+			"Malfurion",
+			"Malorne",
+			"Malygos",
+			"Mannoroth",
+			"Marécage de Zangar",
+			"Mazrigos",
+			"Medivh",
+			"Minahonda",
+			"Moonglade",
+			"Mug'thol",
+			"Nagrand",
+			"Nathrezim",
+			"Naxxramas",
+			"Nazjatar",
+			"Nefarian",
+			"Nemesis",
+			"Neptulon",
+			"Ner'zhul",
+			"Nera'thor",
+			"Nethersturm",
+			"Nordrassil",
+			"Norgannon",
+			"Nozdormu",
+			"Onyxia",
+			"Outland",
+			"Perenolde",
+			"Pozzo dell'Eternità",
+			"Proudmoore",
+			"Quel'Thalas",
+			"Ragnaros",
+			"Rajaxx",
+			"Rashgarroth",
+			"Ravencrest",
+			"Ravenholdt",
+			"Razuvious",
+			"Rexxar",
+			"Runetotem",
+			"Sanguino",
+			"Sargeras",
+			"Saurfang",
+			"Scarshield Legion",
+			"Sen'jin",
+			"Shadowsong",
+			"Shattered Halls",
+			"Shattered Hand",
+			"Shattrath",
+			"Shen'dralar",
+			"Silvermoon",
+			"Sinstralis",
+			"Skullcrusher",
+			"Soulflayer",
+			"Spinebreaker",
+			"Sporeggar",
+			"Steamwheedle Cartel",
+			"Stormrage",
+			"Stormreaver",
+			"Stormscale",
+			"Sunstrider",
+			"Suramar",
+			"Sylvanas",
+			"Taerar",
+			"Talnivarr",
+			"Tarren Mill",
+			"Teldrassil",
+			"Temple noir",
+			"Terenas",
+			"Terokkar",
+			"Terrordar",
+			"The Maelstrom",
+			"The Sha'tar",
+			"The Venture Co",
+			"Theradras",
+			"Thermaplugg",
+			"Thrall",
+			"Throk'Feroth",
+			"Thunderhorn",
+			"Tichondrius",
+			"Tirion",
+			"Todeswache",
+			"Trollbane",
+			"Turalyon",
+			"Twilight's Hammer",
+			"Twisting Nether",
+			"Tyrande",
+			"Uldaman",
+			"Ulduar",
+			"Uldum",
+			"Un'Goro",
+			"Varimathras",
+			"Vashj",
+			"Vek'lor",
+			"Vek'nilash",
+			"Vol'jin",
+			"Wildhammer",
+			"Wrathbringer",
+			"Xavius",
+			"Ysera",
+			"Ysondre",
+			"Zenedar",
+			"Zirkel des Cenarius",
+			"Zul'jin",
+			"Zuluhed"
+				],
+				US:[
+					"Aerie Peak",
+					"Agamaggan",
+					"Aggramar",
+					"Akama",
+					"Alexstrasza",
+					"Alleria",
+					"Altar of Storms",
+					"Alterac Mountains",
+					"Aman'Thul",
+					"Andorhal",
+					"Anetheron",
+					"Antonidas",
+					"Anub'arak",
+					"Anvilmar",
+					"Arathor",
+					"Archimonde",
+					"Area 52",
+					"Argent Dawn",
+					"Arthas",
+					"Arygos",
+					"Auchindoun",
+					"Azgalor",
+					"Azjol-Nerub",
+					"Azralon",
+					"Azshara",
+					"Azuremyst",
+					"Baelgun",
+					"Balnazzar",
+					"Barthilas",
+					"Black Dragonflight",
+					"Blackhand",
+					"Blackrock",
+					"Blackwater Raiders",
+					"Blackwing Lair",
+					"Blade's Edge",
+					"Bladefist",
+					"Bleeding Hollow",
+					"Blood Furnace",
+					"Bloodhoof",
+					"Bloodscalp",
+					"Bonechewer",
+					"Borean Tundra",
+					"Boulderfist",
+					"Bronzebeard",
+					"Burning Blade",
+					"Burning Legion",
+					"Caelestrasz",
+					"Cairne",
+					"Cenarion Circle",
+					"Cenarius",
+					"Cho'gall",
+					"Chromaggus",
+					"Coilfang",
+					"Crushridge",
+					"Daggerspine",
+					"Dalaran",
+					"Dalvengyr",
+					"Dark Iron",
+					"Darkspear",
+					"Darrowmere",
+					"Dath'Remar",
+					"Dawnbringer",
+					"Deathwing",
+					"Demon Soul",
+					"Dentarg",
+					"Destromath",
+					"Dethecus",
+					"Detheroc",
+					"Doomhammer",
+					"Draenor",
+					"Dragonblight",
+					"Dragonmaw",
+					"Drak'Tharon",
+					"Drak'thul",
+					"Draka",
+					"Drakkari",
+					"Dreadmaul",
+					"Drenden",
+					"Dunemaul",
+					"Durotan",
+					"Duskwood",
+					"Earthen Ring",
+					"Echo Isles",
+					"Eitrigg",
+					"Eldre'Thalas",
+					"Elune",
+					"Emerald Dream",
+					"Eonar",
+					"Eredar",
+					"Executus",
+					"Exodar",
+					"Farstriders",
+					"Feathermoon",
+					"Fenris",
+					"Firetree",
+					"Fizzcrank",
+					"Frostmane",
+					"Frostmourne",
+					"Frostwolf",
+					"Galakrond",
+					"Gallywix",
+					"Garithos",
+					"Garona",
+					"Garrosh",
+					"Ghostlands",
+					"Gilneas",
+					"Gnomeregan",
+					"Goldrinn",
+					"Gorefiend",
+					"Gorgonnash",
+					"Greymane",
+					"Grizzly Hills",
+					"Gul'dan",
+					"Gundrak",
+					"Gurubashi",
+					"Hakkar",
+					"Haomarush",
+					"Hellscream",
+					"Hydraxis",
+					"Hyjal",
+					"Icecrown",
+					"Illidan",
+					"Jaedenar",
+					"Jubei'Thos",
+					"Kael'thas",
+					"Kalecgos",
+					"Kargath",
+					"Kel'Thuzad",
+					"Khadgar",
+					"Khaz Modan",
+					"Khaz'goroth",
+					"Kil'jaeden",
+					"Kilrogg",
+					"Kirin Tor",
+					"Korgath",
+					"Korialstrasz",
+					"Kul Tiras",
+					"Laughing Skull",
+					"Lethon",
+					"Lightbringer",
+					"Lightning's Blade",
+					"Lightninghoof",
+					"Llane",
+					"Lothar",
+					"Madoran",
+					"Maelstrom",
+					"Magtheridon",
+					"Maiev",
+					"Mal'Ganis",
+					"Malfurion",
+					"Malorne",
+					"Malygos",
+					"Mannoroth",
+					"Medivh",
+					"Misha",
+					"Mok'Nathal",
+					"Moon Guard",
+					"Moonrunner",
+					"Mug'thol",
+					"Muradin",
+					"Nagrand",
+					"Nathrezim",
+					"Nazgrel",
+					"Nazjatar",
+					"Nemesis",
+					"Ner'zhul",
+					"Nesingwary",
+					"Nordrassil",
+					"Norgannon",
+					"Onyxia",
+					"Perenolde",
+					"Proudmoore",
+					"Quel'Thalas",
+					"Quel'dorei",
+					"Ragnaros",
+					"Ravencrest",
+					"Ravenholdt",
+					"Rexxar",
+					"Rivendare",
+					"Runetotem",
+					"Sargeras",
+					"Saurfang",
+					"Scarlet Crusade",
+					"Scilla",
+					"Sen'jin",
+					"Sentinels",
+					"Shadow Council",
+					"Shadowmoon",
+					"Shadowsong",
+					"Shandris",
+					"Shattered Halls",
+					"Shattered Hand",
+					"Shu'halo",
+					"Silver Hand",
+					"Silvermoon",
+					"Sisters of Elune",
+					"Skullcrusher",
+					"Skywall",
+					"Smolderthorn",
+					"Spinebreaker",
+					"Spirestone",
+					"Staghelm",
+					"Steamwheedle Cartel",
+					"Stonemaul",
+					"Stormrage",
+					"Stormreaver",
+					"Stormscale",
+					"Suramar",
+					"Tanaris",
+					"Terenas",
+					"Terokkar",
+					"Thaurissan",
+					"The Forgotten Coast",
+					"The Scryers",
+					"The Underbog",
+					"The Venture Co",
+					"Thorium Brotherhood",
+					"Thrall",
+					"Thunderhorn",
+					"Thunderlord",
+					"Tichondrius",
+					"Tol Barad",
+					"Tortheldrin",
+					"Trollbane",
+					"Turalyon",
+					"Twisting Nether",
+					"Uldaman",
+					"Uldum",
+					"Undermine",
+					"Ursin",
+					"Uther",
+					"Vashj",
+					"Vek'nilash",
+					"Velen",
+					"Warsong",
+					"Whisperwind",
+					"Wildhammer",
+					"Windrunner",
+					"Winterhoof",
+					"Wyrmrest Accord",
+					"Ysera",
+					"Ysondre",
+					"Zangarmarsh",
+					"Zul'jin",
+					"Zuluhed"
+						],
+						KR:[
+							"굴단",
+							"노르간논",
+							"달라란",
+							"데스윙",
+							"듀로탄",
+							"렉사르",
+							"말퓨리온",
+							"불타는 군단",
+							"세나리우스",
+							"스톰레이지",
+							"아즈샤라",
+							"알렉스트라자",
+							"와일드해머",
+							"윈드러너",
+							"줄진",
+							"하이잘",
+							"헬스크림"
+						],
+		},
+
+	}, //end of data
+	methods:{
+		regionSelected:function(){
+			this.server = '';
+			this.serverList = this.servers[this.region];
+		},
+		sim:function(){
+			this.simulationState = 'before';
+			this.progressText = "Sending simulation request to server!"
+				this.simStats = [];
+
+			let url = '/' + this.region + '/' + this.server + '/' + this.character + '/fight_style=' + String(this.simFightStyle).replace(/ /g,'');	
+		
+		
+			var source = new EventSource(url);
+			source.onopen = function() {
+
+
+
+			};
+			//reinit or it wont be iconized
+			this.$nextTick(function () {
+				// DOM is now updated
+				// `this` is bound to the current instance
+				$WowheadPower.init();     	
+			});
+
+			source.onerror = function (error) {
+				console.log("error:" + error);
 				source.close();
-			}else{
-				if (obj.hasOwnProperty('current_step')){
-				this.simulationState = 'running';
-//	 progressPercent: 0,
-// 92     progressPercentText: '			
-				this.progressPercent = parseInt(obj['current_step'])/parseInt(obj['maximum_steps']);
-				this.progressPercentText = obj['current_step'] + "/" + obj['step_namme'] ;
-			 	this.progressText = "Performing step: " + obj['current_step'] + ": " + obj['step_name'];	
-				} else if (obj.hasOwnProperty('sim')){
-					this.simFull = obj['sim'];
-					this.progressPercent = 100;
-					this.progressPercentText = "100%";
-					this.progressText = "Simulation over !";
-					// Might change this to check for dps in players array 
-					this.charDps = obj.sim.statistics.raid_dps.mean;
-					this.simStats =[];
-//em.parameters </span> <span class="text-xs-right">{{ props.item.text }
-					this.simStats.push ( { parameter: "Fight Style", text: obj.sim.options.fight_style  });
-					this.simStats.push ( { parameter: "Boss Target(s)", text: obj.sim.targets.length  });
-					this.simStats.push ( { parameter: "Mean Fight Duration (seconds)", text: Math.round(obj.sim.players[0].collected_data.fight_length.mean ) });
-					this.simStats.push ( { parameter: "Iterations", text: obj.sim.options.iterations  });
-					this.simStats.push ( { parameter: "Error", text: obj.sim.options.target_error + '%'  });
-					
-			
+			};
+			source.onmessage = (evt) =>{
+				this.simulationState=='running';
+				//console.log(evt.data);
+				let obj = JSON.parse(evt.data);
+				console.log(obj);
+				// if it's an error message
+				if (obj.hasOwnProperty('error')){
+					this.progressText = obj['error'];
+					this.sumulationState = 'error',
+					source.close();
+				}else{
+					if (obj.hasOwnProperty('current_step')){
+						this.simulationState = 'running';
+						//	 progressPercent: 0,
+						// 92     progressPercentText: '			
+						this.progressPercent = parseInt(obj['current_step'])/parseInt(obj['maximum_steps']);
+						this.progressPercentText = obj['current_step'] + "/" + obj['step_namme'] ;
+						this.progressText = "Performing step: " + obj['current_step'] + ": " + obj['step_name'];	
+					} else if (obj.hasOwnProperty('sim')){
+						this.simFull = obj['sim'];
+						this.progressPercent = 100;
+						this.progressPercentText = "100%";
+						this.progressText = "Simulation over !";
+						// Might change this to check for dps in players array 
+						this.charDps = obj.sim.statistics.raid_dps.mean;
+						this.simStats =[];
+						//em.parameters </span> <span class="text-xs-right">{{ props.item.text }
+						this.simStats.push ( { parameter: "Fight Style", text: obj.sim.options.fight_style  });
+						this.simStats.push ( { parameter: "Boss Target(s)", text: obj.sim.targets.length  });
+						this.simStats.push ( { parameter: "Mean Fight Duration (seconds)", text: Math.round(obj.sim.players[0].collected_data.fight_length.mean ) });
+						this.simStats.push ( { parameter: "Iterations", text: obj.sim.options.iterations  });
+						this.simStats.push ( { parameter: "Error", text: obj.sim.options.target_error + '%'  });
 
-					this.simStats.push ( { parameter: "SimC Version", text: obj.version  });
-					this.simStats.push ( { parameter: "SimC Build Date", text: obj.build_date  });
-					this.simStats.push ( { parameter: "SimC Git Revision", text: obj.git_revision  });
-					this.simulationState= 'done';
-					if (obj.sim.players[0].hasOwnProperty('scale_factors')){
-						this.charScaleFactors = obj.sim.players[0].scale_factors;
-						let date = new Date();
-						let primaryString;
-						if (this.charScaleFactors.hasOwnProperty('Str')){
-							primaryString= `Strength=${this.charScaleFactors.Str}`;
-						} else if (this.charScaleFactors.hasOwnProperty('Int')){
-							primaryString= `Intellect=${this.charScaleFactors.Int}`;
-						}else{
-							primaryString= `Agility=${this.charScaleFactors.Agi}`;
-						}
 
-						this.charPawnString =  `( Pawn: v1: "${this.charData.name}  - Balance - ${this.simFull.options.fight_style} - ${date} - (Dis Sedere)": Class=${this.charClass},  ${primaryString}, CritRating=${this.charScaleFactors.Crit}, HasteRating=${this.charScaleFactors.Haste}, MasteryRating=${this.charScaleFactors.Mastery},Versatility=${this.charScaleFactors.Vers}`;
-						// if main hand damage impacts dps (for melee i guess)
-						if (this.charScaleFactors.hasOwnProperty('Wdps')){
-							this.charPawnString = this.charPawnString + `,Dps=${this.charScaleFactors.Wdps}`;	
-						}
-						// if off hand impacts dps 
-						if (this.charScaleFactors.hasOwnProperty('WOHdps')){
-							this.charPawnString = this.charPawnString + `,OffHandDps=${this.charScale.WOHdps};` 
-						}
-						this.charPawnString = this.charPawnString + ")";
 
- 
-//, Spec=Balance, Intellect=2.02, CritRating=2.46, HasteRating=2.52, MasteryRating=2.44, Versatility=2.43 `)
+						this.simStats.push ( { parameter: "SimC Version", text: obj.version  });
+						this.simStats.push ( { parameter: "SimC Build Date", text: obj.build_date  });
+						this.simStats.push ( { parameter: "SimC Git Revision", text: obj.git_revision  });
+						this.simulationState= 'done';
+						if (obj.sim.players[0].hasOwnProperty('scale_factors')){
+
+
+
+							this.charScaleFactors = obj.sim.players[0].scale_factors;
+							//		if (this.charScaleFactors.hasOwnProperty('AP'))
+							//			delete this.charScaleFactors.AP;
+							Object.keys(this.charScaleFactors).forEach( function(key){
+								let names = {   Str: 'Strength',
+									Agi: 'Agility',
+									Int: 'Intellect',
+									Haste: 'Haste',
+									Mastery: 'Mastery',
+									Crit: 'Critical Strike',
+									Vers: 'Versatility',
+									Wdps: 'Weapon DPS',
+									WOHdps: 'Off-hand Weapon DPS',
+								}
+								if (key != 'AP')
+									this.charWeight.push({ name: names[key], value: this.charScaleFactors[key] });			
+
+							},this);
+
+
+
+
+							let date = new Date();
+							let primaryString;
+							if (this.charScaleFactors.hasOwnProperty('Str')){
+								primaryString= `Strength=${parseFloat(this.charScaleFactors.Str).toFixed(2)}`;
+							} else if (this.charScaleFactors.hasOwnProperty('Int')){
+								primaryString= `Intellect=${parseFloat(this.charScaleFactors.Int).toFixed(2)}`;
+							}else{
+								primaryString= `Agility=${praseFloat(this.charScaleFactors.Agi).toFixed(2)}`;
+							}
+
+							this.charPawnString =  `( Pawn: v1: "${this.charData.name} - ${this.simFull.options.fight_style} - ${date} - (Dis Sedere)": Class=${this.charClass},  ${primaryString}, CritRating=${ parseFloat(this.charScaleFactors.Crit).toFixed(2)}, HasteRating=${ parseFloat(this.charScaleFactors.Haste).toFixed(2)}, MasteryRating=${parseFloat(this.charScaleFactors.Mastery).toFixed(2)},Versatility=${parseFloat(this.charScaleFactors.Vers).toFixed(2)}`;
+									// if main hand damage impacts dps (for melee i guess)
+									if (this.charScaleFactors.hasOwnProperty('Wdps')){
+										this.charPawnString = this.charPawnString + `,Dps=${parseFloat(this.charScaleFactors.Wdps).toFixed(2)}`;	
+									}
+									// if off hand impacts dps 
+									if (this.charScaleFactors.hasOwnProperty('WOHdps')){
+										this.charPawnString = this.charPawnString + `,OffHandDps=${parseFloat(this.charScale.WOHdps).toFixed(2)};` 
+									}
+									this.charPawnString = this.charPawnString + ")";
+
+
+									//, Spec=Balance, Intellect=2.02, CritRating=2.46, HasteRating=2.52, MasteryRating=2.44, Versatility=2.43 `)
+						} // end if scale factors
+						if (obj.sim.players[0].hasOwnProperty('stats')){
+							let stats = obj.sim.players[0].stats;
+							let temp = [];
+							stats.forEach( function(el){
+								temp.push( {
+									label: el.name,
+									size: el.portion_amount,
+								});
+								
+
+								},this);
+							console.log("NIIIIGGER");
+							console.log(temp);
+							this.simDamageSource = {
+								label: 'root',
+								children: temp,
+							};
+
+
+						}
+						//reinit or it wont be iconized
+						this.$nextTick(function () {
+							// DOM is now updated
+							// `this` is bound to the current instance
+							$WowheadPower.init();     	
+						});
+
 					}
-		//reinit or it wont be iconized
-		this.$nextTick(function () {
-        		// DOM is now updated
-        		// `this` is bound to the current instance
-		$WowheadPower.init();     	
-		});
-	
-				}
+					}
+
+
+				};
+			},
+			charTyped: function(){
+				charCheck = true;
 			}
-				
-			
-		};
-	},
-	charTyped: function(){
-		charCheck = true;
-	}
-}, //end of method
-computed: {
-	charValidator: function(){
-		if (this.charExists === true)
-			return "check_circle";
-		else
-			return "warning";
+		}, //end of method
+		computed: {
+			charValidator: function(){
+				if (this.charExists === true)
+					return "check_circle";
+				else
+					return "warning";
 
-	},
- charRules: function(){
-	return [
-	//v => v.length <= 25 || 'Max 25 characters',
-	v => {
-		if ( this.region == '' || this.server == ''){
-			return true;
-		}
+			},
+			charRules: function(){
+				return [
+					//v => v.length <= 25 || 'Max 25 characters',
+					v => {
+						if ( this.region == '' || this.server == ''){
+							return true;
+						}
 
-		axios.get('/' + this.region + '/' + this.server + '/' + v + '/check_existence')
- 		 .then( (response) => {
-    			if (response.data.hasOwnProperty('status')){
-				this.charExists = false;
-				this.charData = {};
+						axios.get('/' + this.region + '/' + this.server + '/' + v + '/check_existence')
+							.then( (response) => {
+								if (response.data.hasOwnProperty('status')){
+									this.charExists = false;
+									this.charData = {};
+									this.charItems = [];
+									this.simStats =[];
+									this.simulationState = '';
+									this.charImg = '';
+									//		temp = `${response.data.reason}`;
+									//		console.log("temp: " + temp);
+									//		return temp;
+								}else if  (response.data.hasOwnProperty('lastModified')){
+									this.charExists = true;
+									this.charData = response.data;
+									this.charImg = "https://render-" + this.region + ".worldofwarcraft.com/character/" + this.charData.thumbnail;
+									this.charImg = this.charImg.replace("avatar","inset");
+
+
+								}
+
+							})
+						.catch(function (error) {
+							// handle error
+						})
+						.then ( () =>{ 
+							charCheck = false;
+						});
+						return true;
+					}
+				]},
+
+		},//end of computed
+		watch: {
+
+
+			charData: function( data, oldData){
+				//console.log(data);
 				this.charItems = [];
-				this.simStats =[];
-				this.simulationState = '';
-				this.charImg = '';
-		//		temp = `${response.data.reason}`;
-		//		console.log("temp: " + temp);
-		//		return temp;
-			}else if  (response.data.hasOwnProperty('lastModified')){
-				this.charExists = true;
-				this.charData = response.data;
-				this.charImg = "https://render-" + this.region + ".worldofwarcraft.com/character/" + this.charData.thumbnail;
-				this.charImg = this.charImg.replace("avatar","inset");
-						
+				this.charTalents =[];
+				// if charData is empty we return
+				if (Object.keys(this.charData).length === 0 && this.charData.constructor === Object)
+					return;
+				console.log("offhand"+ typeof(this.charData.offHand));
+				this.charOffHand = (typeof(this.charData.items.offHand) == 'undefined') ? false : true;
+				let temp = ["null","warrior","paladin","hunter","rogue","priest","death knight","shaman","mage","warlock","monk","druid","demon hunter"];
+				this.charClass = temp[this.charData.class];
+				temp = [
+					"null",
+					"Human",
+					"Orc",
+					"Dwarf",
+					"Night Elf",
+					"Undead",
+					"Tauren",
+					"Gnome",
+					"Troll",
+					"Goblin",
+					"Blood Elf",
+					"Draenei",
+					"Fel Orc",
+					"Naga",
+					"Broken",
+					"Skeleton",
+					"Vrykul",
+					"Tuskarr",
+					"Forest Troll",
+					"Taunka",
+					"Northrend Skeleton",
+					"Ice Troll",
+					"Worgen",
+					"Gilnean",
+					"Pandaren",
+					"Pandaren",
+					"Pandaren",
+					"Nightborne",
+					"Highmountain Tauren",
+					"Void Elf",
+					"Lightforged Draenei",
+					"Zandalari Troll",
+					"Kul Tiran",
+					"Human",
+					"Dark Iron Dwarf",
+					"Vulpera",
+					"Mag'har Orc"
+						]
+						this.charRace = temp[this.charData.race];
+
+				Object.keys(data.items).forEach(function(key) {
+					//			console.log(typeof(data.items[key])); 
+					if (typeof(data.items[key]) == "object"){
+						// we don't want to display tabard and shirt
+						if ( key !== "tabard" && key !== "shirt"){
+							let temp = data.items[key];
+							console.log(temp);
+							temp.wowhead=`item=${data.items[key].id}&ilvl=${data.items[key].itemLevel }`; 
+							this.charItems.push(temp);
+						}
+					}
+				},this);
+
+				Object.keys(data.talents[0].talents).forEach( function(key){
+					this.charTalents.push({ wowhead: 'spell=' + data.talents[0].talents[key].spell.id });			
+
+				},this);
+
+				//reinit or it wont be iconized
+				this.$nextTick(function () {
+					// DOM is now updated
+					// `this` is bound to the current instance
+					$WowheadPower.init();     	
+				});
+
 
 			}
-	  
-		})
- 		 .catch(function (error) {
-    		// handle error
-  		})
-		.then ( () =>{ 
-			charCheck = false;
-		});
-		return true;
 		}
-	]},
 
-},//end of computed
-watch: {
+	}); //end new vue
 
-
-	charData: function( data, oldData){
-		//console.log(data);
-		this.charItems = [];
-		this.charTalents =[];
-		// if charData is empty we return
-		if (Object.keys(this.charData).length === 0 && this.charData.constructor === Object)
-			return;
-		console.log("offhand"+ typeof(this.charData.offHand));
-		this.charOffHand = (typeof(this.charData.items.offHand) == 'undefined') ? false : true;
-	 	let temp = ["null","warrior","paladin","hunter","rogue","priest","death knight","shaman","mage","warlock","monk","druid","demon hunter"];
-		this.charClass = temp[this.charData.class];
-		temp = [
-  "null",
-  "Human",
-  "Orc",
-  "Dwarf",
-  "Night Elf",
-  "Undead",
-  "Tauren",
-  "Gnome",
-  "Troll",
-  "Goblin",
-  "Blood Elf",
-  "Draenei",
-  "Fel Orc",
-  "Naga",
-  "Broken",
-  "Skeleton",
-  "Vrykul",
-  "Tuskarr",
-  "Forest Troll",
-  "Taunka",
-  "Northrend Skeleton",
-  "Ice Troll",
-  "Worgen",
-  "Gilnean",
-  "Pandaren",
-  "Pandaren",
-  "Pandaren",
-  "Nightborne",
-  "Highmountain Tauren",
-  "Void Elf",
-  "Lightforged Draenei",
-  "Zandalari Troll",
-  "Kul Tiran",
-  "Human",
-  "Dark Iron Dwarf",
-  "Vulpera",
-  "Mag'har Orc"
-]
-		this.charRace = temp[this.charData.race];
-
-		Object.keys(data.items).forEach(function(key) {
-//			console.log(typeof(data.items[key])); 
-			if (typeof(data.items[key]) == "object"){
-				// we don't want to display tabard and shirt
-				if ( key !== "tabard" && key !== "shirt"){
-				let temp = data.items[key];
-				console.log(temp);
-				temp.wowhead=`item=${data.items[key].id}&ilvl=${data.items[key].itemLevel }`; 
-				this.charItems.push(temp);
-				}
-			}
-		},this);
-
-		Object.keys(data.talents[0].talents).forEach( function(key){
-			this.charTalents.push({ wowhead: 'spell=' + data.talents[0].talents[key].spell.id });			
-
-		},this);
-		
-		//reinit or it wont be iconized
-		this.$nextTick(function () {
-        		// DOM is now updated
-        		// `this` is bound to the current instance
-		$WowheadPower.init();     	
-		});
-		
-
-		}
-	}
-
-}); //end new vue
-
-</script>
+					</script>
 
 
-<style>
+					<style>
 .iconlarge del,.iconmedium del,.icontiny del{
 	background-image: none !important;
 }
@@ -985,7 +1098,7 @@ img.iconlarge, img.iconmedium, img.icontiny{
 	font-family: "Avenir Next", Lato, Helvetica, sans-serif !important;
 }
 .paladin{
-    border-left: 5px solid rgb(245, 140, 186);
+	border-left: 5px solid rgb(245, 140, 186);
 }
 .shaman{
 	border-left: 5px solid rgb(0, 112, 222);
@@ -1004,20 +1117,27 @@ img.iconlarge, img.iconmedium, img.icontiny{
 }
 .char-name{
 	font-size: 32px !important;
-    	font-weight: 600 !important;
-    	line-height: 1.25 !important;
-    	margin: 0px !important;
-    	letter-spacing: 0.2em !important;
+	font-weight: 600 !important;
+	line-height: 1.25 !important;
+	margin: 0px !important;
+	letter-spacing: 0.2em !important;
 }
 .char-dps{
 	letter-spacing: 0.2em !important;
 }
 .sim-header{
-	
+	background-color: #202020;	
+	font-size: 1.25em;
+	font-weight: 700;
 }
-</style>
+.d2b-sunburst-arc.d2b-sunburst-level-0{
+	visibility: hidden;
+}
 
-</body>
+
+					</style>
+
+	</body>
 
 
 
