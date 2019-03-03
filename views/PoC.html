@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+
+
+		<link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+
+		<!-- development version, includes helpful console warnings -->
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+		<script src="//unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
+
+		<script src="https://unpkg.com/vue-d2b@1.0.15/dist/vue-d2b.min.js"></script> 
+
+
+
+	</head>
+
+	<body>
+		<div id="app">
+			<v-app dark fluid ma-0 pa-0 fill-height>
+				<v-content>
+					<v-container>
+						<v-layout row align-center>
+							<v-flex style="text-align:center;">
+								<div style="height:500px; width:500px;">   	<sunburst-chart :data = 'itReadyData' :config = 'sunburstConfig'></sunburst-chart> </div>
+							</v-flex>
+						</v-layout>
+					</v-container>
+				</v-content>
+			</v-app>
+		</div>
+
+
+		<script>
+// cant use import cause ES5 LUL
+//import axios from 'axios';
+new Vue({
+	el: '#app',
+	components: {
+		'sunburst-chart': vued2b.ChartSunburst
+	},
+
+	data: {
+
+		sunburstConfig: function (chart) {
+			// just a hack to call the breadcrumb html generator ONCE (single value)
+			//chart.breadcrumbs().values([0]);
+
+			chart.chartFrame().breadcrumbsEnabled(false);                   
+			chart.tooltip().html( (d) => {
+				//those will always be 0.XX format
+
+				const percent = d.value / d.selected.value;
+				const percentText = percent > 1 ?
+					'' :
+					`<div class = 'd2b-sunburst-percent'>
+					${parseFloat(percent*100).toFixed(2)}%
+					</div>`;
+
+				console.log(d);
+				let temp = '';
+				if (d.data.hasOwnProperty('date')){
+					console.log('yeay');
+					temp = `<div>Error date: ${d.data.date }  </div>`;
+				}
+				return `
+					<div class = 'd2b-sunburst-label'>
+					${d.label}: ${d.value}
+
+				</div>
+					<div class = 'd2b-sunburst-value'>
+					${percentText}
+				${temp}
+				</div>
+					`;
+			});
+
+
+
+		},
+		itReadyData:
+		{
+			"label": "All Results",
+			"children": [
+			{
+				"label": "ACA",
+				"children": [
+				{
+					"label": "France",
+					"children": [
+					{
+						"label": "errors",
+						"children": [
+						{
+							"label": "Saint-Nazaire",
+							"size": 3
+						},
+						{
+							"label": "Marseille",
+							"children": [
+							{
+								"label": "https://www.societegenerale.com",
+								"size": 1,
+								"date": "03/01/2019"
+							},
+							{
+								"label": "https://www.societegenerale.com",
+								"size": 1,
+								"date": "03/02/2019"
+							},
+							{
+								"label": "https://www.societegenerale.com",
+								"size": 1,
+								"date": "03/03/2019"
+							}
+							]
+						}
+						]
+					}
+					]
+				},
+				{
+					"children": [
+					{
+						"children": [
+						{
+							"label": "Hamburg",
+							"size": 2
+						},
+						{
+							"label": "Berlin",
+							"size": 6
+						}
+						],
+						"label": "Success"
+					}
+					],
+					"label": "Germany"
+				},
+				{
+					"label": "Spain",
+					"children": [
+					{
+						"label": "Getafe",
+						"size": 2
+					}
+					]
+				}
+				]
+			},
+			{
+				"label": "ADS",
+				"children": [
+				{
+					"label": "France",
+					"children": [
+					{
+						"label": "Marseille",
+						"size": 1
+					},
+					{
+						"label": "Saint-Nazaire",
+						"size": 2
+					}
+					]
+				},
+				{
+					"label": "Germany",
+					"children": [
+					{
+						"label": "Hamburg",
+						"size": 2
+					},
+					{
+						"label": "Berlin",
+						"size": 6
+					}
+					]
+				},
+				{
+					"label": "Spain",
+					"children": [
+					{
+						"label": "Getafe",
+						"size": 2
+					}
+					]
+				}
+				]
+			},
+			{
+				"label": "AH",
+				"children": [
+				{
+					"label": "France",
+					"children": [
+					{
+						"label": "Marseille",
+						"size": 1
+					},
+					{
+						"label": "Saint-Nazaire",
+						"size": 2
+					}
+					]
+				},
+				{
+					"label": "Germany",
+					"children": [
+					{
+						"label": "Hamburg",
+						"size": 2
+					},
+					{
+						"label": "Berlin",
+						"size": 6
+					}
+					]
+				},
+				{
+					"label": "Spain",
+					"children": [
+					{
+						"label": "Getafe",
+						"size": 2
+					}
+					]
+				}
+				]
+			}
+			]
+		}
+	}//end data
+}); // end new vue
+		</script>
+	</body>
+</html>

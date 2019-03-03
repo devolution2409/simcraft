@@ -21,8 +21,11 @@
 		<script>var whTooltips = {colorLinks: true, iconizeLinks: true, renameLinks: false, iconSize:"medium"};</script>
 		<script src="http://wow.zamimg.com/widgets/power.js"></script>
 		<title> Simcraft wrapper </title>
-		<script src="https://unpkg.com/vue-d2b@1.0.15/dist/vue-d2b.min.js"></script> 
-
+		<!-- sunburst -->
+		<script src="https://unpkg.com/vue-d2b@1.0.15/dist/vue-d2b.min.js"></script>  
+		<!-- area -->
+		<script src="https://unpkg.com/apexcharts"></script>
+		<script src="https://unpkg.com/vue-apexcharts"></script>
 
 	</head>
 
@@ -56,28 +59,33 @@
 								</v-text-field>
 							</v-flex>
 						</v-layout>
-
-						<v-layout>
-							<v-flex>
-						         <v-subheader class="pl-0">Fight Style</v-subheader>
-								<v-select v-model="simFightStyle" v-bind:items="fightStyles" outline class="form-control">
+						<v-expansion-panel class="elevation-24">
+							<v-expansion-panel-content>
+								<template v-slot:header>
+									        <div>Simulation Options</div>
+										      </template>
+						<v-layout row justify-space-between>
+							<v-flex xs12 sm12 md3>
+								<v-select box v-model="simFightStyle" v-bind:items="fightStyles" class="form-control"label="Fight Style">
+								</v-select>
+								</v-flex>	
+				       				<v-flex xs12 sm12 md2>
+					
+								<v-select box v-model="simGenerateScaleFactors" v-bind:items="[true,false]" class="form-control"label="Calculate Scale Factors">
 								</v-select>
 							</v-flex>
-							<v-flex>
-						         <v-subheader class="pl-0">Compute Scale Factors</v-subheader>
-								    <v-switch v-model="simGenerateScaleFactors"></v-switch>
-							</v-flex>
-						 <v-flex>
-						         <v-subheader class="pl-0">Iterations</v-subheader>
-						        <v-slider
-						                 v-model="simTargetIterations"
-						          	 thumb-label="always"
-		  						 :min=5000
-		  						 :max=100000
-					          ></v-slider>
+						 <v-flex xs12 sm12 md2>
+								<v-select box v-model="simTargetIterations" v-bind:items="iterations" class="form-control"label="Iterations">
+								</v-select>
 					           </v-flex>			
-						</v-layout>
+						 <v-flex xs12 sm12 md2>
+								<v-select box v-model="simTargetFightLength" v-bind:items="fightLengths" class="form-control"label="Fight Length">
+								</v-select>
+					           </v-flex>			
 
+						</v-layout>
+						</v-expansion-panel-content>
+						</v-expansion-panel>
 						<v-layout>
 							<v-btn block color="secondary" dark v-on:click="sim" :disabled="charExists == false" >Run Simulation !</v-btn>
 						</v-layout>	
@@ -202,7 +210,10 @@
 
 							</v-flex>
 							</v-layout>
-						</v-layout>
+				
+							     <apexchart width="700" type="area" :options="apexchartOptions" :series="simDamagePerSecondSeries"></apexchart>
+		</v-layout>
+
 							</v-container>
 						</v-content>
 					</v-app>
@@ -216,11 +227,71 @@
 //import axios from 'axios';
 new Vue({
 	el: '#app',
-		components: {
-			    'sunburst-chart': vued2b.ChartSunburst
-				      },
+	components:{
+			'sunburst-chart': vued2b.ChartSunburst,
+			'apexchart': VueApexCharts,
+		},
 
 	data: {
+
+		apexchartOptions: {
+			dataLabels: {
+		        	enabled: false
+			},
+			chart: {
+             			id: 'vuechart-example'},
+	   		title: {
+				text: 'Damage Per Second',
+      				align: 'center',
+				style:{
+					color: 'white'
+				}
+			},
+			xaxis: {
+				type: 'numeric',
+				labels:{
+					show: false
+				},
+				title:{
+					text: 'Fight Duration (seconds)',
+					style:{
+						color:'white',
+					}
+				}
+			},	
+			yaxis:{
+				min: 0,
+				max: 60000,
+				labels:{
+					style:{
+						color:'white'
+					}
+				},
+				title:{
+					text: "Damage per second",
+					style:{
+						color:'white'
+					}
+				}
+			},
+			tooltip:{
+				theme: 'dark'
+				}
+		
+		
+		},
+/*			           chart: {
+					               id: 'vuechart-example'
+							                 },
+				             xaxis: {
+						                 categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998]
+									           }
+				           },
+		         series: [{
+				           name: 'series-1',
+					             data: [30, 40, 45, 50, 49, 60, 70, 91]
+							             }],
+*/		       
 
 		    sunburstConfig: function (chart) {
 			    // just a hack to call the breadcrumb html generator ONCE (single value)
@@ -272,10 +343,15 @@ new Vue({
 		simDamageSource: {},
 		simDamageSourceText: [],
 		simulationState: "",
-		// simulations options
+		simDamagePerSecondSeries: [],
+		/************** Simulation Options ***********/
 		simFightStyle: 'Patchwerk',
 		simGenerateScaleFactors: false,
 		simTargetIterations: 10000,
+		simTargetFightLength: '5 minutes',
+		/*********************************************/	
+		iterations:[5000,10000,20000,30000,50000,100000],
+		fightLengths:['20 seconds','40 seconds','1 minute','2 minutes','3 minutes','4 minutes','5 minutes','6 minutes','7 minutes', '8 minutes', '9 minutes','10 minutes'],
 
 		progressPercent: 0,
 		progressPercentText: '',
@@ -968,6 +1044,25 @@ new Vue({
 
 
 						}
+						if (obj.sim.players[0].collected_data.timeline_dmg.data)
+		         			this.simDamagePerSecondSeries = [{
+				           			name: 'series-1',
+					             		data: obj.sim.players[0].collected_data.timeline_dmg.data
+							             }];
+						let temp = [];
+						
+						
+						let fightLength = obj.sim.players[0].collected_data.timeline_dmg.data.length;
+						fightLength = Math.ceil((fightLengthMean+1)/10)*10;	
+						let split = Math.ceil(fightLength/7);
+
+						for (let i = 0; i < n; i++){
+							temp.push(i*7);
+						}
+						
+
+								
+
 						//reinit or it wont be iconized
 						this.$nextTick(function () {
 							// DOM is now updated
@@ -1172,6 +1267,16 @@ img.iconlarge, img.iconmedium, img.icontiny{
 	visibility: hidden;
 }
 
+.v-expansion-panel__container,.v-expansion-panel__header{
+        background-color: #424242;
+}
+.v-expansion-panel__container.v-expansion-panel__container--active{
+        background-color: #42424200 !important;
+}
+
+.wowhead-tooltip-powered{
+	display: none !important;
+}
 
 					</style>
 
